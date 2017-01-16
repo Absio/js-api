@@ -15,7 +15,7 @@ TODO
 ### Container
 This is the highest level module that wraps IDO below.  Naming TBD
 #### `initialize(serverUrl, apiKey, options)`
-This method must be called first to initialize the library.
++ This method must be called first to initialize the library.
 
 Parameter   | Type  | Description
 :------|:------|:-----------
@@ -27,7 +27,7 @@ Option | Type  | Default | Description
 :------|:------|:--------|:-----------
 cacheLocal | boolean | `true` | Set false to prevent caching information in local database and OFS
 defaultAccess | Array of [AccessInfo](#AccessInfo) | `[]` | This defines the default access for all methods that grant access to objects.
-###### AccessInfo
+##### AccessInfo
 ```javascript
 {
   expiration: <null or Date()>,
@@ -36,12 +36,11 @@ defaultAccess | Array of [AccessInfo](#AccessInfo) | `[]` | This defines the def
 }
 ```
 
-#### `create(content, options)` -> `'containerId'`  
-Create an encrypted container with the provided `content`. The container will be uploaded and access will be granted to the specified users, unless the `localAccessOnly` option is set to `true`.
+#### `create(content, options)` -> `'containerId'`
 
-Returns a Promise that resolves to the new container's ID.
-
-Throws an Error if the connection is unavailable or an access userId is not found.
++ Creates an encrypted container with the provided `content`. The container will be uploaded and access will be granted to the specified users, unless the `localAccessOnly` option is set to `true`.
++ Returns a Promise that resolves to the new container's ID.
++ Throws an Error if the connection is unavailable or an access userId is not found.
 
 Parameter   | Type  | Description
 :------|:------|:-----------
@@ -56,11 +55,11 @@ localAccessOnly | boolean | `false` | This prevents uploading the container.  Th
 type | String | TODO define `'default type'` | A string used to categorize the container on the server.
 
 #### `update(id, options)`
-Update the container with the specified ID. At least one optional parameters must be provided for an update to occur.
++ Updates the container with the specified ID. At least one optional parameters must be provided for an update to occur.
 
-Returns a Promise.
++ Returns a Promise.
 
-Throws an Error if the connection is unavailable or an access userId is not found.
++ Throws an Error if the connection is unavailable or an access userId is not found.
 
 Parameter   | Type  | Description
 :------|:------|:-----------
@@ -73,11 +72,11 @@ Option | Type  | Default | Description
 content | Buffer | null | The content to update.
 
 #### `getDecrypted(id, options)` -> [DecryptedContainer](#DecryptedContainer)
-Gets the container and decrypts it for usage. By default it downloads any required data, includes the content, and caches any downloaded data locally.  See options for overriding this behavior.
++ Gets the container and decrypts it for usage. By default it downloads any required data, includes the content, and caches any downloaded data locally.  See options for overriding this behavior.
 
-Returns a Promise that resolves to a [DecryptedContainer](#DecryptedContainer)
++ Returns a Promise that resolves to a [DecryptedContainer](#DecryptedContainer)
 
-Throws an Error if the container or connection is unavailable.
++ Throws an Error if the container or connection is unavailable.
 
 Parameter   | Type  | Description
 :------|:------|:-----------
@@ -90,7 +89,7 @@ cacheLocal | boolean | `true` | Set false to prevent caching information in loca
 includeContent | boolean | `true` | Set to `false` to prevent downloading and decrypting content.  This is helpful when the content is very large.
 localAccessOnly | boolean | `false` | Prevents downloading container from the server. Only locally cached containers will be available.
 
-###### DecryptedContainer
+##### DecryptedContainer
 ``` javascript
 {
   access: [
@@ -121,9 +120,9 @@ localAccessOnly | boolean | `false` | Prevents downloading container from the se
 
 ### Utilities
 #### `hash(seed)` -> 'hashedString'
-Produce a sha256 hash of the specified seed.
++ Produces a sha256 hash of the specified seed.
 
-Returns a string with the hashed value.
++ Returns a string with the hashed value.
 
 Parameter   | Type  | Description
 :------|:------|:-----------
