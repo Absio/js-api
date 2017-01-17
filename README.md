@@ -5,10 +5,37 @@ This is the basic Node.js JavaScript API.
 ## Index
 
 * [Getting Started](#first-link)
-* [API](#second-link)
 * [Examples](#third-link)
+* [API](#second-link)
 
 ## Getting Started
+1. Installation:
+   ```
+   npm install absio
+   ```
+2. Import as regular module and initialize:
+   ```javascript
+   var absio = require('absio');
+
+   ```
+3. Initialize the library and log in with an account:   
+   ```javascript
+   absio.initialize('api.absio.com', yourApiKey);
+   await absio.logIn('ed46da09-40dc-45c4-9c1a-8c5e11334986', accountPassword, accountAnswer);
+   ```
+4. Start creating encrypted containers:
+   ```javascript
+   const sensitiveData = new Buffer('information to protect');
+   const containerAccess = [{
+     userId: 'ed46da09-40dc-45c4-9c1a-8c5e11334986',
+     permission: 'read-write',
+     expiration: new Date(2020)
+   }];
+
+   const containerId = await absio.create(sensitiveData, { access: containerAccess });
+   ```
+
+## Examples
 TODO
 
 ## API
@@ -35,6 +62,9 @@ defaultAccess | Array of [AccessInfo](#AccessInfo) | `[]` | This defines the def
   userId: 'userIdOfUserWithDefaultAccess'
 }
 ```
+
+#### `logIn()`
++ TODO
 
 #### `create(content, options)` -> `'containerId'`
 
@@ -119,6 +149,35 @@ localAccessOnly | boolean | `false` | Prevents downloading container from the se
   }
 }
 ```
+### `getLatestByType(type, options)` -> `[{ decryptedContainer }]`
++ Downloads and decrypts any new or updated containers of the specified type. This will return all new containers since the last call of this method, unless specified in `options`.
+
++ Returns a Promise that resolves to an Array of [DecryptedContainer](#DecryptedContainer).
+
++ Throws an Error if the connection is unavailable.
+
+Parameter   | Type  | Description
+:------|:------|:-----------
+type | String | A string used to categorize the container on the server.
+options | Object | See table below.
+
+Option | Type  | Default | Description
+:------|:------|:--------|:-----------
+startingEventId | Number | -1 | 0 will start from the beginning and download all containers for the current user.  Use the `storageInformation.latestEventId` field of the [DecryptedContainer](#DecryptedContainer) to start from existing successful event. -1 will download all new since last call.
+
+### `delete(id, options)`
++ Deletes the container from the server and local file system, unless specified in options.
+
++ Returns a Promise.
+
+Parameter   | Type  | Description
+:------|:------|:-----------
+id | String | The ID of the container to delete
+options | Object | See table below.
+
+Option | Type  | Default | Description
+:------|:------|:--------|:-----------
+localAccessOnly | boolean | `false` | Prevents deleting container from the server. Only locally cached containers will be deleted.
 
 ### Utilities
 #### `hash(seed)` -> 'hashedString'
@@ -129,6 +188,3 @@ localAccessOnly | boolean | `false` | Prevents downloading container from the se
 Parameter   | Type  | Description
 :------|:------|:-----------
 seed | String | Seed for producing the hash
-
-## Examples
-TODO
