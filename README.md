@@ -56,7 +56,7 @@ Option | Type  | Default | Description
 cacheLocal | boolean | `true` | Set false to prevent caching information in local database and OFS
 defaultAccess | Array of [AccessInfo](#AccessInfo) | `[]` | This defines the default access for all methods that grant access to objects.
 ##### AccessInfo
-```javascript
+``` JSON
 {
   expiration: <null or Date()>,
   permissions: <"read", "read-write", "write">,
@@ -193,7 +193,7 @@ seed | String | Seed for producing the hash
   permissions: <"read", "read-write", "write">,
   userId: 'userIdOfUserWithDefaultAccess'
 }
-```
+
 
 #### `logIn()`
 + TODO
