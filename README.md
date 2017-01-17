@@ -87,7 +87,7 @@ Option | Type  | Default | Description
 **header** | Object | `{}` | Use this to store any metadata about the content.  This data is independently encrypted and can be retrieved prior to downloading and decrypting the full content.
 **localAccessOnly** | boolean | `false` | This prevents uploading the container.  The container will only be accessible locally.
 **type** | String | TODO define `'default type'` | A string used to categorize the container on the server.
-
+---
 ### `update(id, options)`
 Updates the container with the specified ID. At least one optional parameters must be provided for an update to occur.
 
@@ -104,7 +104,7 @@ Option | Type  | Default | Description
 :------|:------|:--------|:-----------
 |||TODO Add all rows from `create` when finalized
 content | Buffer | null | The content to update.
-
+---
 ### `getDecrypted(id, options)` -> [DecryptedContainer](#DecryptedContainer)
 Gets the container and decrypts it for usage. By default it downloads any required data, includes the content, and caches any downloaded data locally.  See options for overriding this behavior.
 
