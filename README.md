@@ -10,10 +10,12 @@ This is the basic Node.js JavaScript API.
 
 ## Getting Started
 1. Installation:
+
    ```
    npm install absio
    ```
 2. Import as regular module and initialize:
+
    ``` javascript
    var absio = require('absio');
 
