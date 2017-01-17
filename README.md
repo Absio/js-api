@@ -4,27 +4,32 @@ This is the basic Node.js JavaScript API.
 
 ## Index
 
-* [Getting Started](#first-link)
-* [Examples](#third-link)
-* [API](#second-link)
+* [Overview](#overview)
+* [Getting Started](#getting-started)
+* [Examples](#examples)
+* [API](#api)
+
+## Overview
+TODO
 
 ## Getting Started
 1. Installation:
    ```
-   npm install absio
+   npm install absio-secured-container
    ```
 2. Import as regular module and initialize:
 
    ``` javascript
-   var absio = require('absio');
+   var securedContainer = require('absio-secured-container');
 
    ```
-3. Initialize the library and log in with an account:   
+3. Initialize the library and log in with an account:  
+
    ``` javascript
-   absio.initialize('api.absio.com', yourApiKey);
-   await absio.logIn('ed46da09-40dc-45c4-9c1a-8c5e11334986', accountPassword, accountAnswer);
+   securedContainer.initialize('api.absio.com', yourApiKey);
+   await securedContainer.logIn('ed46da09-40dc-45c4-9c1a-8c5e11334986', accountPassword, accountAnswer);
    ```
-4. Start creating encrypted containers:
+4. Start creating secured containers:
    ``` javascript
    const sensitiveData = new Buffer('information to protect');
    const containerAccess = [{
@@ -33,7 +38,7 @@ This is the basic Node.js JavaScript API.
      expiration: new Date(2020)
    }];
 
-   const containerId = await absio.create(sensitiveData, { access: containerAccess });
+   const containerId = await securedContainer.create(sensitiveData, { access: containerAccess });
    ```
 
 ## Examples
@@ -42,21 +47,22 @@ TODO
 ## API
 TODO - API Index
 ### Container
-This is the highest level module that wraps IDO below.  Naming TBD
+TODO Explain more
+
 ### `initialize(serverUrl, apiKey, options)`
 This method must be called first to initialize the library.
 
 Parameter   | Type  | Description
 :------|:------|:-----------
-serverUrl | String | The URL of the API server. (Example TODO: sandbox.absio.com)
-apiKey | String | The API Key for your Absio Development Account ([TODO link](https://developer.absio.com/register))
-options | Object | See table below
+`serverUrl` | String | The URL of the API server. (Example TODO: sandbox.absio.com)
+`apiKey` | String | The API Key for your Absio Development Account ([TODO link](https://developer.absio.com/register))
+`options` | Object | See table below
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
-cacheLocal | boolean | `true` | Set false to prevent caching information in local database and OFS
-defaultAccess | Array of [AccessInfo](#AccessInfo) | `[]` | This defines the default access for all methods that grant access to objects.
-##### AccessInfo
+`cacheLocal` | boolean | `true` | Set false to prevent caching information in local database and OFS
+`defaultAccess` | Array of [accessInformation](#accessInformation) | `[]` | This defines the default access for all methods that grant access to objects.
+##### accessInformation
 ```javascript
 {
   expiration: <null or Date()>,
@@ -66,8 +72,15 @@ defaultAccess | Array of [AccessInfo](#AccessInfo) | `[]` | This defines the def
 ```
 
 ---
-### `logIn()`
-+ TODO
+### `logIn(userId, password, answer)`
++ TODO description and any options?
+
+Parameter   | Type  | Description
+:-----------|:------|:-----------
+`userId` | String | The userId value is retuned at registration.  Call `register()` or use our user creation interface.
+`password` | String | The password used to decrypt the keyFile.
+`answer` | String | The answer used to reset the password or retrieve the keyFile from the server.
+
 
 ---
 ### `create(content, options)` -> `'containerId'`
@@ -79,13 +92,13 @@ defaultAccess | Array of [AccessInfo](#AccessInfo) | `[]` | This defines the def
    Throws an Error if the connection is unavailable or an access userId is not found.
 
 Parameter   | Type  | Description
-:------|:------|:-----------
+:-----------|:------|:-----------
 `content` | Buffer | Node.js Buffer for the data to be stored in the container.
 `options` | Object | See table below.
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
-`access` | Array of [AccessInfo](#AccessInfo) | `[]` if not defined in initialize options | The access granted to the container on upload.
+`access` | Array of [accessInformation](#accessInformation) | `[]` if not defined in initialize options | The access granted to the container on upload.
 `header` | Object | `{}` | Use this to store any metadata about the content.  This data is independently encrypted and can be retrieved prior to downloading and decrypting the full content.
 `localAccessOnly` | boolean | `false` | This prevents uploading the container.  The container will only be accessible locally.
 `type` | String | TODO define `'default type'` | A string used to categorize the container on the server.
@@ -100,34 +113,34 @@ Throws an Error if the connection is unavailable or an access userId is not foun
 
 Parameter   | Type  | Description
 :------|:------|:-----------
-id | String | The ID of the container to update
-options | Object | See table below.
+`id` | String | The ID of the container to update
+`options` | Object | See table below.
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
 |||TODO Add all rows from `create` when finalized
-content | Buffer | null | The content to update.
+`content` | Buffer | null | The content to update.
 
 ---
-### `getDecrypted(id, options)` -> [DecryptedContainer](#DecryptedContainer)
+### `getDecrypted(id, options)` -> [container](#container)
 Gets the container and decrypts it for usage. By default it downloads any required data, includes the content, and caches any downloaded data locally.  See options for overriding this behavior.
 
-Returns a Promise that resolves to a [DecryptedContainer](#DecryptedContainer)
+Returns a Promise that resolves to a [container](#container)
 
 Throws an Error if the container or connection is unavailable.
 
 Parameter   | Type  | Description
 :------|:------|:-----------
-id | String | The ID of the container to update
-options | Object | See table below.
+`id` | String | The ID of the container to update
+`options` | Object | See table below.
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
-cacheLocal | boolean | `true` | Set false to prevent caching information in local database and OFS
-includeContent | boolean | `true` | Set to `false` to prevent downloading and decrypting content.  This is helpful when the content is very large.
-localAccessOnly | boolean | `false` | Prevents downloading container from the server. Only locally cached containers will be available.
+`cacheLocal` | boolean | `true` | Set false to prevent caching information in local database and OFS
+`includeContent` | boolean | `true` | Set to `false` to prevent downloading and decrypting content.  This is helpful when the content is very large.
+`localAccessOnly` | boolean | `false` | Prevents downloading container from the server. Only locally cached containers will be available.
 
-##### DecryptedContainer
+##### container
 ``` javascript
 {
   access: [
@@ -157,21 +170,21 @@ localAccessOnly | boolean | `false` | Prevents downloading container from the se
 ```
 
 ---
-### `getLatestByType(type, options)` -> `[{ decryptedContainer }]`
+### `getLatestByType(type, options)` -> `[{ container }]`
 Downloads and decrypts any new or updated containers of the specified type. This will return all new containers since the last call of this method, unless specified in `options`.
 
-Returns a Promise that resolves to an Array of [DecryptedContainer](#DecryptedContainer).
+Returns a Promise that resolves to an Array of [container](#container).
 
 Throws an Error if the connection is unavailable.
 
 Parameter   | Type  | Description
 :------|:------|:-----------
-type | String | A string used to categorize the container on the server.
-options | Object | See table below.
+`type` | String | A string used to categorize the container on the server.
+`options` | Object | See table below.
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
-startingEventId | Number | -1 | 0 will start from the beginning and download all containers for the current user.  Use the `storageInformation.latestEventId` field of the [DecryptedContainer](#DecryptedContainer) to start from existing successful event. -1 will download all new since last call.
+`startingEventId` | Number | -1 | 0 will start from the beginning and download all containers for the current user.  Use the `storageInformation.latestEventId` field of the [container](#container) to start from existing successful event. -1 will download all new since last call.
 
 ---
 ### `delete(id, options)`
@@ -181,20 +194,20 @@ Returns a Promise.
 
 Parameter   | Type  | Description
 :------|:------|:-----------
-id | String | The ID of the container to delete
-options | Object | See table below.
+`id` | String | The ID of the container to delete
+`options` | Object | See table below.
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
-localAccessOnly | boolean | `false` | Prevents deleting container from the server. Only locally cached containers will be deleted.
+`localAccessOnly` | boolean | `false` | Prevents deleting container from the server. Only locally cached containers will be deleted.
 
 ---
 ### Utilities
-### `hash(seed)` -> 'hashedString'
+### `hash(seed)` -> `'hashedString'`
 Produces a sha256 hash of the specified seed.
 
 Returns a string with the hashed value.
 
 Parameter   | Type  | Description
 :------|:------|:-----------
-seed | String | Seed for producing the hash
+`seed` | String | Seed for producing the hash
