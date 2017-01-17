@@ -18,7 +18,7 @@ This is the basic Node.js JavaScript API.
    var absio = require('absio');
 
    ```
-3. Initialize the library and log in with an account:   
+3. Initialize the library and log in with an account:
    ``` javascript
    absio.initialize('api.absio.com', yourApiKey);
    await absio.logIn('ed46da09-40dc-45c4-9c1a-8c5e11334986', accountPassword, accountAnswer);
@@ -56,7 +56,7 @@ Option | Type  | Default | Description
 cacheLocal | boolean | `true` | Set false to prevent caching information in local database and OFS
 defaultAccess | Array of [AccessInfo](#AccessInfo) | `[]` | This defines the default access for all methods that grant access to objects.
 ##### AccessInfo
-``` JSON
+``` javascript
 {
   expiration: <null or Date()>,
   permissions: <"read", "read-write", "write">,
