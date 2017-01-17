@@ -38,9 +38,11 @@ defaultAccess | Array of [AccessInfo](#AccessInfo) | `[]` | This defines the def
 
 #### `create(content, options)` -> `'containerId'`
 
-+ Creates an encrypted container with the provided `content`. The container will be uploaded and access will be granted to the specified users, unless the `localAccessOnly` option is set to `true`.
-+ Returns a Promise that resolves to the new container's ID.
-+ Throws an Error if the connection is unavailable or an access userId is not found.
+   Creates an encrypted container with the provided `content`. The container will be uploaded and access will be granted to the specified users, unless the `localAccessOnly` option is set to `true`.
+
+   Returns a Promise that resolves to the new container's ID.
+
+   Throws an Error if the connection is unavailable or an access userId is not found.
 
 Parameter   | Type  | Description
 :------|:------|:-----------
