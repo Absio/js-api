@@ -17,7 +17,7 @@ TODO
 TODO
 
 ## Getting Started
-The `userId`, `password`, and `answer` used below in Step 2 are the credentials for an existing user. [Users](#users) can be created with the `register()` method or with our web-based secure user creation utility. For more details see the [Users](#users) section above.
+The `userId`, `password`, and `answer` used below are the credentials for two existing users.  To simplify the example the users are called Alice and Bob. [Users](#users) can be created with the `register()` method or with our web-based secure user creation utility. For more details see the [Users](#users) section above.
 
 1. Installation:
 
@@ -33,19 +33,29 @@ The `userId`, `password`, and `answer` used below in Step 2 are the credentials 
 
    ``` javascript
    securedContainer.initialize('your.absioApiServer.com', yourApiKey);
-   await securedContainer.logIn('ed46da09-40dc-45c4-9c1a-8c5e11334986', accountPassword, accountAnswer);
+   await securedContainer.logIn(alicesId, alicesPassword, alicesAnswer);
    ```
 4. Start creating secured containers:
 
    ``` javascript
    const sensitiveData = new Buffer('information to protect');
    const containerAccess = [{
-       userId: 'ed46da09-40dc-45c4-9c1a-8c5e11334986',
+       userId: bobsId,
        permission: 'read-write',
        expiration: new Date(2020)
    }];
 
    const containerId = await securedContainer.create(sensitiveData, { access: containerAccess });
+   ```
+
+5. Securely access these containers from another system:
+
+   ``` javascript
+   await securedContainer.logIn(bobsId, bobsPassword, bobsAnswer);
+   const latestContainers = await securedContainer.getLatest();
+
+   // Also can use a known container ID returned from create.
+   const container = await securedContainer.getContainer(knownContainerId);
    ```
 
 ## Usage
@@ -54,7 +64,7 @@ The following usage examples requires that the general setup in [Getting Started
 TODO - General example here
 
 
-### Possible 418 Usage
+### Possible 418 Intelligence Usage
 Below are three examples specific to our understanding of the simplest usage in the 418 use cases.  Some of the Promises could be executed in parallel for maximum efficiency, but to simplify the examples this is not included below.
 
 #### Customer System
@@ -74,7 +84,7 @@ async function shareUnstructuredData(unstructuredData) {
 
 ``` javascript
 async function processUnstructuredData() {
-    const unstructuredDataContainers = await securedContainer.getLatestByType('unstructured-data');
+    const unstructuredDataContainers = await securedContainer.getLatest({ type: 'unstructured-data' });
 
     for (let container of unstructuredDataContainers) {
         const results = createNetFlowDataWithDataMap(container.content);
@@ -107,7 +117,7 @@ async function shareObfuscatedDataMap(obfuscatedDataMap) {
 
 ``` javascript
 async function processNetFlowData() {
-    const netFlowContainers = await securedContainer.getLatestByType('net-flow-data');
+    const netFlowContainers = await securedContainer.getLatest({ type: 'net-flow-data' });
 
     for (let container of netFlowContainers) {
         const report = performAnalysis(container.content);
@@ -120,7 +130,10 @@ async function processNetFlowData() {
 }
 
 async function processUpdatedReports() {
-    const updatedReportContainers = await securedContainer.getLatestByType('reports', { updatesOnly: true });
+    const updatedReportContainers = await securedContainer.getLatest({
+        type: 'report'
+        updatesOnly: true
+    });
 
     for (let reportContainer of updatedReportContainers) {
         updateSystemForReport(reportContainer.content);
@@ -137,12 +150,12 @@ This method must be called first to initialize the library.
 Parameter   | Type  | Description
 :------|:------|:-----------
 `serverUrl` | String | The URL of the API server.
-`apiKey` | String | The API Key for your Absio Development Account ([TODO link](https://developer.absio.com/register))
+`apiKey` | String | The API Key is required for using the API server.
 `options` | Object [optional] | See table below.
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
-`cacheLocal` | boolean | `true` | Set false to prevent caching information in local database and OFS.
+`cacheLocal` | boolean | `true` | By default we cache information in a local database and Obfuscated File System.  This allows for offline access and greater efficiency.  Set to `false` to prevent this behavior.
 `defaultAccess` | Array of [accessInformation](#accessInformation) | `[]` | This defines the default access for all methods that grant access to objects.
 ##### accessInformation
 ```javascript
@@ -162,18 +175,18 @@ Generates private keys and registers a new user on the API server.  This user's 
 
 Returns a Promise that resolves to the new user's ID.
 
-Throws an error if the connection is unavailable;
+Throws an Error if the connection is unavailable.
 
 Parameter   | Type  | Description
 :-----------|:------|:-----------
-`password` | String | The password used to decrypt the key file.
+`password` | String | The password used to encrypt the key file.
 `question` | String | The question should only be used as a hint to remember the answer. This string is stored in plain text and should not contain sensitive information.
 `answer` | String | The answer used to reset the password or retrieve the key file from the server.
 
 ---
 
 ### `logIn(userId, password, answer[, options])`
-Decrypts the key file containing the user's private keys with the provided password.  If the decryption succeeds, then a private key will be used to authenticate with the server.  The answer is used to download the key file.
+Decrypts the key file containing the user's private keys with the provided password.  If the decryption succeeds, then a private key will be used to authenticate with the server.  If the key file is not cached locally, the answer is used to download the key file.
 
 Returns a Promise.
 
@@ -181,19 +194,21 @@ Throws an Error if the credentials are incorrect, or in the case that a connecti
 
 Parameter   | Type  | Description
 :-----------|:------|:-----------
-`userId` | String | The userId value is retuned at registration.  Call `register()` or use our [user creation interface](TODO place url here).
+`userId` | String | The userId value is returned at registration.  Call `register()` or use our [user creation interface](TODO place url here).
 `password` | String | The password used to decrypt the key file.
 `answer` | String | The answer used to reset the password or retrieve the key file from the server.
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
-`cacheFileLocal` | boolean | `true` | Set false to prevent caching the encrypted key file in the local OFS.
+`cacheFileLocal` | boolean | `true` | By default we cache the encrypted key file in the local Obfuscated File System for offline and greater efficiency.  Set to `false` to prevent this from being cached.
 
 ---
 
 ### `create(content[, options])` -> `'containerId'`
 
-Creates an encrypted container with the provided `content`. The container will be uploaded and access will be granted to the specified users, unless the `localAccessOnly` option is set to `true`.
+Creates an encrypted container with the provided `content`. The container will be uploaded and access will be granted to the specified users, unless the `localAccessOnly` option is set to `true`.  
+
+The container will never expire for the owner.  The owner is automatically granted full permission to the container.
 
 Returns a Promise that resolves to the new container's ID.
 
@@ -201,7 +216,7 @@ Throws an Error if the connection is unavailable or an access userId is not foun
 
 Parameter   | Type  | Description
 :-----------|:------|:-----------
-`content` | Buffer | Node.js Buffer for the data to be stored in the container.
+`content` | [Buffer](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html) | Node.js [Buffer](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html) for the data to be stored in the container.
 `options` | Object [optional] | See table below..
 
 Option | Type  | Default | Description
@@ -228,12 +243,12 @@ Parameter   | Type  | Description
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
 |||TODO Add all rows from `create` when finalized
-`content` | Buffer | null | The content to update.
+`content` | [Buffer](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html) | null | The content to update.
 
 ---
 
 ### `getContainer(id[, options])` -> [container](#container)
-Gets the secured container and decrypts it for usage. By default it downloads any required data, includes the content, and caches downloaded data locally.  See the options for overriding this behavior.
+Gets the secured container and decrypts it for usage. By default it downloads any required data, includes the content, and caches downloaded data locally.  Only encrypted data is cached locally and it is stored in an Obfuscated File System.  See the options for overriding this behavior.
 
 Returns a Promise that resolves to a [container](#container)
 
@@ -246,9 +261,9 @@ Parameter   | Type  | Description
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
-`cacheLocal` | boolean | `true` | Set false to prevent caching information in local database and OFS
+`cacheLocal` | boolean | `true` | By default we cache information in a local database and Obfuscated File System.  This allows for offline access and greater efficiency.  Set to `false` to prevent this behavior.
 `includeContent` | boolean | `true` | Set to `false` to prevent downloading and decrypting content.  This is helpful when the content is very large.
-`localAccessOnly` | boolean | `false` | Prevents downloading container from the server. Only locally cached containers will be available.
+`localAccessOnly` | boolean | `false` | Prevents downloading container from the server. Only containers cached locally in the Obfuscated File System will be available.
 
 ##### container
 ``` javascript
@@ -281,10 +296,10 @@ Option | Type  | Default | Description
 
 ---
 
-### `getLatestContainers([options])` -> `[{ container }]`
-Downloads and decrypts any new or updated containers of the specified type. This will return all new containers since the last call of this method, unless specified in `options`.
+### `getLatestContainers([options])` -> [`[ { container } ]`](#container)
+Downloads and decrypts any new or updated containers. This will return all new containers since the last call of this method, unless specified in `options`. Options can be used to change the criteria for the containers returned by this method.
 
-Returns a Promise that resolves to an Array of [container](#container).
+Returns a Promise that resolves to an Array of [containers](#container).
 
 Throws an Error if the connection is unavailable.
 
@@ -295,13 +310,13 @@ Parameter   | Type  | Description
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
 `startingEventId` | Number | `-1` | 0 will start from the beginning and download all containers for the current user.  Use the `storageInformation.latestEventId` field of the [container](#container) to start from existing successful event. -1 will download all new since last call.
-`type` | String | TODO define `'default type'` | A string used to categorize the container on the server.
+`type` | String | TODO define `'default type'` | Only containers of the specified type will be downloaded. Type is a string used to categorize containers on the server.
 `updatesOnly` | boolean | `false` | Both new and updated data is included in the results by default. Set to `true` to only return updated containers.
 
 ---
 
 ### `delete(id[, options])`
-Deletes the container from the server and local file system, unless specified in options.
+Deletes the container from the server and revokes access for all users, unless specified in options. Any data relating to this container will be deleted from the local Obfuscated File System.
 
 Returns a Promise.
 
