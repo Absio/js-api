@@ -55,7 +55,7 @@ TODO - General example here
 
 
 ### Possible 418 Usage
-Below are three examples specific to our understanding of the simplest usage in the 418 use cases.
+Below are three examples specific to our understanding of the simplest usage in the 418 use cases.  Some of the Promises could be executed in parallel for maximum efficiency, but to simplify the examples this is not included below.
 
 #### Customer System
 
@@ -152,6 +152,23 @@ Option | Type  | Default | Description
     userId: 'userIdOfUserWithDefaultAccess'
 }
 ```
+
+---
+
+### `register(password, question, answer)` -> `'userId'`
+**Important:** The `password` and `answer` should be kept secret.  We recommend using long and complex values with numbers and/or symbols.  Do not store them publicly in plain text.
+
+Generates private keys and registers a new user on the API server.  This user's private keys are encrypted with the `password` to produce a key file.  The `answer` is used to reset the password and download the key file. Our web-based user creation utility can also be used to securely generate static users.
+
+Returns a Promise that resolves to the new user's ID.
+
+Throws an error if the connection is unavailable;
+
+Parameter   | Type  | Description
+:-----------|:------|:-----------
+`password` | String | The password used to decrypt the key file.
+`question` | String | The question should only be used as a hint to remember the answer. This string is stored in plain text and should not contain sensitive information.
+`answer` | String | The answer used to reset the password or retrieve the key file from the server.
 
 ---
 
