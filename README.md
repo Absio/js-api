@@ -4,13 +4,21 @@
 
 * [Overview](#overview)
 * [Getting Started](#getting-started)
-* [Examples](#examples)
+* [Usage](#usage)
 * [API](#api)
 
 ## Overview
+TODO - general
+
+### Users
+TODO
+
+### Encryption
 TODO
 
 ## Getting Started
+The `userId`, `password`, and `answer` used below in Step 2 are the credentials for an existing user. [Users](#users) can be created with the `register()` method or with our web-based secure user creation utility. For more details see the [Users](#users) section above.
+
 1. Installation:
 
    ```
@@ -24,7 +32,7 @@ TODO
 3. Initialize the library and log in with an account:  
 
    ``` javascript
-   securedContainer.initialize('api.absio.com', yourApiKey);
+   securedContainer.initialize('your.absioApiServer.com', yourApiKey);
    await securedContainer.logIn('ed46da09-40dc-45c4-9c1a-8c5e11334986', accountPassword, accountAnswer);
    ```
 4. Start creating secured containers:
@@ -40,8 +48,14 @@ TODO
    const containerId = await securedContainer.create(sensitiveData, { access: containerAccess });
    ```
 
-## Examples
-TODO More likely needed here -- Below are three examples specific to our understanding of the simplest solution to the 418 use case.
+## Usage
+The following usage examples requires that the general setup in [Getting Started](#getting-started) has been completed.
+
+TODO - General example here
+
+
+### Possible 418 Usage
+Below are three examples specific to our understanding of the simplest usage in the 418 use cases.
 
 #### Customer System
 
@@ -62,13 +76,11 @@ async function shareUnstructuredData(unstructuredData) {
 async function processUnstructuredData() {
     const unstructuredDataContainers = await securedContainer.getLatestByType('unstructured-data');
 
-    // Each iteration and share could be executed in parallel with Promise.All()
     for (let container of unstructuredDataContainers) {
-        const netFlowFormat = createNetFlowFormat(container.content);
-        await shareNetFlowData(netFlowFormat);
+        const results = createNetFlowDataWithDataMap(container.content);
 
-        const obfuscatedDataMap = createObfuscatedDataMap(container.content);
-        await shareObfuscatedDataMap(obfuscatedDataMap);
+        await shareNetFlowData(results.netFlowFormat);
+        await shareObfuscatedDataMap(results.obfuscatedDataMap);
     }
 }
 
@@ -100,9 +112,8 @@ async function processNetFlowData() {
     for (let container of netFlowContainers) {
         const report = performAnalysis(container.content);
 
-        const containerOptions =
         await securedContainer.create(report, {
-            access: [trustedDataBrokerID, customerSystemID],
+            access: [trustedDataBrokerID],
             type: 'report'
         });
     }
@@ -125,7 +136,7 @@ This method must be called first to initialize the library.
 
 Parameter   | Type  | Description
 :------|:------|:-----------
-`serverUrl` | String | The URL of the API server. (api.absio.com)
+`serverUrl` | String | The URL of the API server.
 `apiKey` | String | The API Key for your Absio Development Account ([TODO link](https://developer.absio.com/register))
 `options` | Object [optional] | See table below.
 
@@ -204,8 +215,8 @@ Option | Type  | Default | Description
 
 ---
 
-### `getDecrypted(id[, options])` -> [container](#container)
-Gets the container and decrypts it for usage. By default it downloads any required data, includes the content, and caches any downloaded data locally.  See options for overriding this behavior.
+### `getContainer(id[, options])` -> [container](#container)
+Gets the secured container and decrypts it for usage. By default it downloads any required data, includes the content, and caches downloaded data locally.  See the options for overriding this behavior.
 
 Returns a Promise that resolves to a [container](#container)
 
@@ -253,7 +264,7 @@ Option | Type  | Default | Description
 
 ---
 
-### `getLatestByType(type[, options])` -> `[{ container }]`
+### `getLatestContainers([options])` -> `[{ container }]`
 Downloads and decrypts any new or updated containers of the specified type. This will return all new containers since the last call of this method, unless specified in `options`.
 
 Returns a Promise that resolves to an Array of [container](#container).
@@ -262,12 +273,12 @@ Throws an Error if the connection is unavailable.
 
 Parameter   | Type  | Description
 :------|:------|:-----------
-`type` | String | A string used to categorize the container on the server.
 `options` | Object [optional] | See table below..
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
 `startingEventId` | Number | `-1` | 0 will start from the beginning and download all containers for the current user.  Use the `storageInformation.latestEventId` field of the [container](#container) to start from existing successful event. -1 will download all new since last call.
+`type` | String | TODO define `'default type'` | A string used to categorize the container on the server.
 `updatesOnly` | boolean | `false` | Both new and updated data is included in the results by default. Set to `true` to only return updated containers.
 
 ---
