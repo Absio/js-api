@@ -1,4 +1,4 @@
-# Absio Secured Container
+# [absio-logo](https://github.com/Absio/js-api/raw/previewWithExamples/absio%20logo.png "Absio") Absio Secured Container
 
 ## Index
 
