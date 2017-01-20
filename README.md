@@ -1,4 +1,4 @@
-# [absio-logo](https://github.com/Absio/js-api/raw/previewWithExamples/absio%20logo.png "Absio") Absio Secured Container
+# Absio Secured Container
 
 ## Index
 
@@ -61,8 +61,77 @@ The `userId`, `password`, and `answer` used below are the credentials for two ex
 ## Usage
 The following usage examples requires that the general setup in [Getting Started](#getting-started) has been completed.
 
-TODO - General example here
+#### Create
+This is an example of creating a container that contains some secret report that contains sensitive data.
 
+``` javascript
+const reportHeader = {
+    canBe: 'any existing data structure.',
+    couldBe: 'information that describes the content.',
+    willBe: 'serialized with JSON.stringify() before being encrypted.',
+    example: {
+        recordCount: 500,
+        applicationEnforceableMetadata: {
+            allowPrint: false,
+            allowExport: false
+        }
+    }
+};
+
+const reportAccess = [{
+    {
+        userId: trustedSystemId,
+        expiration: new Date(2022)
+        permissions: {
+            read: true,
+            write: false,
+            modifyAccess: false
+        }
+    }
+];
+
+const secretReport = new Buffer('Secret Report...000-00-0000...');
+const reportContainerId = await securedContainer.create(secretReport, {
+    access: reportAccess
+    header: reportHeader
+});
+
+```
+
+#### Update
+
+The secret report [created above](#create) needs to be updated later with additional records containing sensitive information.  Also a new trusted system should have full access to this report.
+
+``` javascript
+const reportContainer = await securedContainer.get(reportContainerId);
+
+const updatedSecretReport = updateReport(reportContainer.content, recordsToAdd);
+reportContainer.header.example.recordCount += recordsToAdd.length;
+
+reportContainer.access.push({
+    userId: addedSystemId,
+    permissions: {
+        read: true,
+        write: true,
+        modifyAccess: true
+    }
+});
+
+await securedContainer.update(reportContainerId, {
+    content: updatedSecretReport,
+    header: reportContainer.header,
+    access: reportContainer.access
+});
+
+```
+
+#### Delete
+
+The secret report [created above](#create) should no longer be accessible.
+
+``` javascript
+await securedContainer.delete(reportContainerId);
+```
 
 ### Possible 418 Intelligence Usage
 Below are three examples specific to our understanding of the simplest usage in the 418 use cases.  Some of the Promises could be executed in parallel for maximum efficiency, but to simplify the examples this is not included below.
@@ -155,8 +224,10 @@ Parameter   | Type  | Description
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
+`applicationName` | String | `''` | The API server uses the application name to identify different applications.  Obfuscated File System data will be saved separately from other applications when this is specified.
 `cacheLocal` | boolean | `true` | By default we cache information in a local database and Obfuscated File System.  This allows for offline access and greater efficiency.  Set to `false` to prevent this behavior.
-`defaultAccess` | Array of [accessInformation](#accessInformation) | `[]` | This defines the default access for all methods that grant access to objects.
+`obfuscatedFileSystemSeed` | String | `apiKey` | By default we use the specified `apiKey` as the seed to the Obfuscated File System.  If would like greater granularity and separation of data, then provide a unique static string for the seed value.
+`rootDirectory` | String | `'./'` (current directory) | By default the root directory of the database and Obfuscated File System will be the current directory.  
 ##### accessInformation
 ```javascript
 {
