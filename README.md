@@ -55,30 +55,29 @@ The `userId`, `password`, and `answer` used below are the credentials for two ex
    const latestContainers = await securedContainer.getLatest();
 
    // Also can use a known container ID returned from create.
-   const container = await securedContainer.getContainer(knownContainerId);
+   const container = await securedContainer.get(knownContainerId);
    ```
 
 ## Usage
 The following usage examples requires that the general setup in [Getting Started](#getting-started) has been completed.
 
 #### Create
-This is an example of creating a container that contains some secret report that contains sensitive data.
+This is an example of creating a container that contains sensitive data.
 
 ``` javascript
-const reportHeader = {
-    canBe: 'any existing data structure.',
-    couldBe: 'information that describes the content.',
-    willBe: 'serialized with JSON.stringify() before being encrypted.',
-    example: {
-        recordCount: 500,
-        applicationEnforceableMetadata: {
-            allowPrint: false,
-            allowExport: false
-        }
+const secretData = new Buffer('Secret Report...000-00-0000...');
+
+// Optional: Define a custom header that is bound to the content with encryption.
+const containerHeader = {
+    recordCount: 500,
+    applicationEnforceableMetadata: {
+        allowPrint: false,
+        allowExport: false
     }
 };
 
-const reportAccess = [{
+// Optional: Grant access to the container with permissions and/or expiration.
+const containerAccess = [{
     {
         userId: trustedSystemId,
         expiration: new Date(2022)
@@ -90,25 +89,43 @@ const reportAccess = [{
     }
 ];
 
-const secretReport = new Buffer('Secret Report...000-00-0000...');
-const reportContainerId = await securedContainer.create(secretReport, {
-    access: reportAccess
-    header: reportHeader
+// Create the container
+const containerId = await securedContainer.create(secretData, {
+    access: containerAccess
+    header: containerHeader
 });
-
 ```
+
+#### Get
+
+This demonstrates the ways to get containers.
+
+``` javascript
+// Get the content with a known ID
+const container = await securedContainer.get(knownContainerId);
+
+// The application expects to be granted access to one or more containers.
+const latestContainers = await securedContainer.getLatest();
+
+// This can be narrowed further to return only the latest of a given type.
+const latestOfType = await securedContainer.getLatest({ type: 'exampleType' });
+```
+
 
 #### Update
 
-The secret report [created above](#create) needs to be updated later with additional records containing sensitive information.  Also a new trusted system should have full access to this report.
+The container [created above](#create) needs to be updated later with additional data containing sensitive information.  Also a new trusted system is given full access to this report.
 
 ``` javascript
-const reportContainer = await securedContainer.get(reportContainerId);
+// Get the container securely
+const container = await securedContainer.get(containerId);
 
-const updatedSecretReport = updateReport(reportContainer.content, recordsToAdd);
-reportContainer.header.example.recordCount += recordsToAdd.length;
+// Do custom business logic to update the content and header.  This can be anything.
+updateSecretData(container.content, recordsToAdd);
+container.header.recordCount += recordsToAdd.length;
 
-reportContainer.access.push({
+// Grant additional access with full permissions and no expiration
+container.access.push({
     userId: addedSystemId,
     permissions: {
         read: true,
@@ -117,20 +134,16 @@ reportContainer.access.push({
     }
 });
 
-await securedContainer.update(reportContainerId, {
-    content: updatedSecretReport,
-    header: reportContainer.header,
-    access: reportContainer.access
-});
-
+// Update the container
+await securedContainer.update(container);
 ```
 
 #### Delete
 
-The secret report [created above](#create) should no longer be accessible.
+The container with secret data [created above](#create) should no longer be accessible.
 
 ``` javascript
-await securedContainer.delete(reportContainerId);
+await securedContainer.delete(containerId);
 ```
 
 ### Possible 418 Intelligence Usage
@@ -227,15 +240,7 @@ Option | Type  | Default | Description
 `applicationName` | String | `''` | The API server uses the application name to identify different applications.  Obfuscated File System data will be saved separately from other applications when this is specified.
 `cacheLocal` | boolean | `true` | By default we cache information in a local database and Obfuscated File System.  This allows for offline access and greater efficiency.  Set to `false` to prevent this behavior.
 `obfuscatedFileSystemSeed` | String | `apiKey` | By default we use the specified `apiKey` as the seed to the Obfuscated File System.  If would like greater granularity and separation of data, then provide a unique static string for the seed value.
-`rootDirectory` | String | `'./'` (current directory) | By default the root directory of the database and Obfuscated File System will be the current directory.  
-##### accessInformation
-```javascript
-{
-    expiration: <null or Date()>,
-    permissions: <"read", "read-write", "write">,
-    userId: 'userIdOfUserWithDefaultAccess'
-}
-```
+`rootDirectory` | String | `'./'` | By default the root directory of the database and Obfuscated File System will be the current directory.  
 
 ---
 
@@ -288,14 +293,32 @@ Throws an Error if the connection is unavailable or an access userId is not foun
 Parameter   | Type  | Description
 :-----------|:------|:-----------
 `content` | [Buffer](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html) | Node.js [Buffer](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html) for the data to be stored in the container.
-`options` | Object [optional] | See table below..
+`options` | Object [optional] | See table below.
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
 `access` | Array of user IDs (String) or [accessInformation](#accessInformation) for setting permissions and expiration | `[]`, if not defined in initialize options | The access granted to the container on upload.
 `header` | Object | `{}` | Use this to store any metadata about the content.  This data is independently encrypted and can be retrieved prior to downloading and decrypting the full content.
-`localAccessOnly` | boolean | `false` | This prevents uploading the container.  The container will only be accessible locally.
-`type` | String | TODO define `'default type'` | A string used to categorize the container on the server.
+`uploadToServer` | boolean | `true` | By default we upload the secured container to the server for backup and granting access.  Set to `false` to prevent server storage of encrypted containers.
+`type` | String | `null` | A string used to categorize the container on the server.
+
+#### accessInformation
+```javascript
+{
+    expiration: <null or Date()>,
+    permissions: { // Default permissions:
+        read: true,
+        write: false,
+        modifyAccess: false
+    },
+    userId: 'userIdOfUserWithAccess'
+}
+```
+
+---
+
+### `update(container[, options])`
+TODO based on confluence feedback
 
 ---
 
@@ -309,7 +332,7 @@ Throws an Error if the connection is unavailable or an access userId is not foun
 Parameter   | Type  | Description
 :------|:------|:-----------
 `id` | String | The ID of the container to update
-`options` | Object [optional] | See table below..
+`options` | Object [optional] | See table below.
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
@@ -318,7 +341,7 @@ Option | Type  | Default | Description
 
 ---
 
-### `getContainer(id[, options])` -> [container](#container)
+### `get(id[, options])` -> [container](#container)
 Gets the secured container and decrypts it for usage. By default it downloads any required data, includes the content, and caches downloaded data locally.  Only encrypted data is cached locally and it is stored in an Obfuscated File System.  See the options for overriding this behavior.
 
 Returns a Promise that resolves to a [container](#container)
@@ -328,7 +351,7 @@ Throws an Error if the container or connection is unavailable.
 Parameter   | Type  | Description
 :------|:------|:-----------
 `id` | String | The ID of the container to update
-`options` | Object [optional] | See table below..
+`options` | Object [optional] | See table below.
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
@@ -336,7 +359,7 @@ Option | Type  | Default | Description
 `includeContent` | boolean | `true` | Set to `false` to prevent downloading and decrypting content.  This is helpful when the content is very large.
 `localAccessOnly` | boolean | `false` | Prevents downloading container from the server. Only containers cached locally in the Obfuscated File System will be available.
 
-##### container
+#### container
 ``` javascript
 {
     access: [
@@ -367,7 +390,7 @@ Option | Type  | Default | Description
 
 ---
 
-### `getLatestContainers([options])` -> [`[ { container } ]`](#container)
+### `getLatest([options])` -> [`[ { container } ]`](#container)
 Downloads and decrypts any new or updated containers. This will return all new containers since the last call of this method, unless specified in `options`. Options can be used to change the criteria for the containers returned by this method.
 
 Returns a Promise that resolves to an Array of [containers](#container).
@@ -376,7 +399,7 @@ Throws an Error if the connection is unavailable.
 
 Parameter   | Type  | Description
 :------|:------|:-----------
-`options` | Object [optional] | See table below..
+`options` | Object [optional] | See table below.
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
@@ -394,11 +417,39 @@ Returns a Promise.
 Parameter   | Type  | Description
 :------|:------|:-----------
 `id` | String | The ID of the container to delete
-`options` | Object [optional] | See table below..
+`options` | Object [optional] | See table below.
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
 `localAccessOnly` | boolean | `false` | Prevents deleting container from the server. Only locally cached containers will be deleted.
+
+---
+
+### `getAccessNotifications(id)` -> [`[ { accessNotification } ]`](#accessNotification)
+TODO
+
+#### accessNotification
+TODO
+
+---
+
+`getSecurityQuestion(userId)` -> `'security question for the current user'`
+TODO
+
+---
+
+`resetPassword(currentAnswer, newPassword)`
+TODO
+
+---
+
+`changePassword(currentAnswer, currentPassword, newPassword)`
+TODO
+
+---
+
+`changeQuestionAndAnswer(currentAnswer, currentPassword, newQuestion, newAnswer)`
+TODO
 
 ---
 
