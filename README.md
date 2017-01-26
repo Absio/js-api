@@ -231,7 +231,7 @@ async function processUpdatedReports() {
     * [container](#container)
   * [getLatest([options])](#getlatestoptions-----container--)
   * [getAccessNotifications(id)](#getaccessnotificationsid-----accessnotification--)
-    * [accessNotification](#accessNotification)
+    * [accessNotification](#accessnotification)
   * [update(container[, options])](#updatecontainer-options)
   * [update(id[, options])](#updateid-options)
 * General
@@ -430,7 +430,7 @@ Option | Type  | Default | Description
     content: Buffer(),
     header: {},
     id: 'IdAsGuid',
-    length: 12345, // TODO What length is this?
+    securedLength: 12345,
     storageInformation: {
         created: Date(),
         filePath: 'Path in local file system',
@@ -462,16 +462,16 @@ Parameter   | Type  | Description
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
 `startingEventId` | Number | `-1` | 0 will start from the beginning and download all containers for the current user.  Use the `storageInformation.latestEventId` field of the [container](#container) to start from existing successful event. -1 will download all new since last call.
-`type` | String | TODO define `'default type'` | Only containers of the specified type will be downloaded. Type is a string used to categorize containers on the server.
+`type` | String | `null` | Only containers of the specified type will be downloaded. Type is a string used to categorize containers on the server.
 `updatesOnly` | boolean | `false` | Both new and updated data is included in the results by default. Set to `true` to only return updated containers.
 
 ---
 
-### `getAccessNotifications(id)` -> [`[ { accessNotification } ]`](#accessNotification)
+### `getAccessNotifications(id)` -> [`[ { accessNotification } ]`](#accessnotification)
 
 Gets the dates that users first accessed the secured container on the server.
 
-Returns a promise that resolves to an Array of [accessNotification](#accessNotification).
+Returns a promise that resolves to an Array of [accessNotification](#accessnotification).
 
 Throws an Error if the ID is not found or a connection is unavailable.
 
