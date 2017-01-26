@@ -143,7 +143,7 @@ await securedContainer.update(container);
 The container with secret data [created above](#create) should no longer be accessible.
 
 ``` javascript
-await securedContainer.delete(containerId);
+await securedContainer.deleteContainer(containerId);
 ```
 
 ### Possible 418 Intelligence Usage
@@ -224,7 +224,23 @@ async function processUpdatedReports() {
 ```
 
 ## API
-TODO - API Index
+*[`initialize(serverUrl, apiKey[, options])`](#initializeserverurl-apikey-options)
+*[`register(password, question, backupPassphrase)`](#registerpassword-question-backuppassphrase---userid)
+*[`logIn(userId, password, backupPassphrase[, options])`](#loginuserid-password-backuppassphrase-options)
+*[`create(content[, options])` -> `'containerId'`](#createcontent-options---containerid)
+*[`deleteContainer(id[, options])`](#deleteid-options)
+*[`update(container[, options])`](#updatecontainer-options)
+*[`update(id[, options])`](#updateid-options)
+*[`get(id[, options])`](#getid-options---container)
+**[`container`](#container)
+*[`getLatest([options])`](#getlatestoptions-----container--)
+*[`getAccessNotifications(id)`](#getaccessnotificationsid-----accessnotification--)
+**[`accessNotification`](#accessNotification)
+*[`getBackupReminder(userId)`](#getbackupreminderuserid---reminder-for-the-backup-passphrase)
+*[`resetPassword(userId, backupPassphrase, newPassword)`](#resetpassworduserid-backuppassphrase-newpassword)
+*[`changePassword(backupPassphrase, currentPassword, newPassword)`](#changepasswordbackuppassphrase-currentpassword-newpassword)
+*[`changeBackupCredentials(currentPassphrase, currentPassword, newReminder, newPassphrase)`](#changebackupcredentialscurrentpassphrase-currentpassword-newreminder-newpassphrase)
+*[`hash(seed)` ](#hashseed---hashedstring)
 
 ### `initialize(serverUrl, apiKey[, options])`
 This method must be called first to initialize the library.
@@ -357,6 +373,24 @@ Option | Type  | Default | Description
 `uploadToServer` | boolean | `true` | By default we upload the secured container to the server for backup and granting access.  Set to `false` to prevent server storage of encrypted containers.
 `type` | String | `null` | A string used to categorize the container on the server.
 
+---
+
+### `deleteContainer(id[, options])`
+
+Deletes the container from the server and revokes access for all users, unless specified in options. Any data relating to this container will be deleted from the local Obfuscated File System.
+
+Returns a Promise.
+
+Throws an Error if the ID is not found or a connection is unavailable.
+
+Parameter   | Type  | Description
+:------|:------|:-----------
+`id` | String | The ID of the container to delete.
+`options` | Object [optional] | See table below.
+
+Option | Type  | Default | Description
+:------|:------|:--------|:-----------
+`localAccessOnly` | boolean | `false` | Prevents deleting container from the server. Only locally cached containers will be deleted
 
 ---
 
@@ -427,25 +461,6 @@ Option | Type  | Default | Description
 `startingEventId` | Number | `-1` | 0 will start from the beginning and download all containers for the current user.  Use the `storageInformation.latestEventId` field of the [container](#container) to start from existing successful event. -1 will download all new since last call.
 `type` | String | TODO define `'default type'` | Only containers of the specified type will be downloaded. Type is a string used to categorize containers on the server.
 `updatesOnly` | boolean | `false` | Both new and updated data is included in the results by default. Set to `true` to only return updated containers.
-
----
-
-### `delete(id[, options])`
-
-Deletes the container from the server and revokes access for all users, unless specified in options. Any data relating to this container will be deleted from the local Obfuscated File System.
-
-Returns a Promise.
-
-Throws an Error if the ID is not found or a connection is unavailable.
-
-Parameter   | Type  | Description
-:------|:------|:-----------
-`id` | String | The ID of the container to delete.
-`options` | Object [optional] | See table below.
-
-Option | Type  | Default | Description
-:------|:------|:--------|:-----------
-`localAccessOnly` | boolean | `false` | Prevents deleting container from the server. Only locally cached containers will be deleted.
 
 ---
 
