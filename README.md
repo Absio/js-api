@@ -33,12 +33,12 @@ The `userId`, `password`, and `backupPassphrase` used below are the credentials 
 
    ``` javascript
    securedContainer.initialize('your.absioApiServer.com', yourApiKey);
-   await securedContainer.logIn(alicesId, alicesPassword, alicesAnswer);
+   await securedContainer.logIn(alicesId, alicesPassword, alicesBackupPassphrase);
    ```
 4. Start creating secured containers:
 
    ``` javascript
-   const sensitiveData = new Buffer('information to protect');
+   const sensitiveData = new Buffer('Sensitive Data...000-00-0000...');
    const containerAccess = [{
        userId: bobsId,
        permission: 'read-write',
@@ -51,7 +51,7 @@ The `userId`, `password`, and `backupPassphrase` used below are the credentials 
 5. Securely access these containers from another system:
 
    ``` javascript
-   await securedContainer.logIn(bobsId, bobsPassword, bobsAnswer);
+   await securedContainer.logIn(bobsId, bobsPassword, bobsBackupPassphrase);
    const latestContainers = await securedContainer.getLatest();
 
    // Also can use a known container ID returned from create.
@@ -65,7 +65,7 @@ The following usage examples requires that the general setup in [Getting Started
 This is an example of creating a container that contains sensitive data.
 
 ``` javascript
-const secretData = new Buffer('Secret Report...000-00-0000...');
+const sensitiveData = new Buffer('Sensitive Data...000-00-0000...');
 
 // Optional: Define a custom header that is bound to the content with encryption.
 const containerHeader = {
@@ -90,7 +90,7 @@ const containerAccess = [{
 ];
 
 // Create the container
-const containerId = await securedContainer.create(secretData, {
+const containerId = await securedContainer.create(sensitiveData, {
     access: containerAccess
     header: containerHeader
 });
@@ -121,7 +121,7 @@ The container [created above](#create) needs to be updated later with additional
 const container = await securedContainer.get(containerId);
 
 // Do custom business logic to update the content and header.  This can be anything.
-updateSecretData(container.content, recordsToAdd);
+updatesensitiveData(container.content, recordsToAdd);
 container.header.recordCount += recordsToAdd.length;
 
 // Grant additional access with full permissions and no expiration
