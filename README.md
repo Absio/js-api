@@ -224,23 +224,26 @@ async function processUpdatedReports() {
 ```
 
 ## API
-*[`initialize(serverUrl, apiKey[, options])`](#initializeserverurl-apikey-options)
-*[`register(password, question, backupPassphrase)`](#registerpassword-question-backuppassphrase---userid)
-*[`logIn(userId, password, backupPassphrase[, options])`](#loginuserid-password-backuppassphrase-options)
-*[`create(content[, options])` -> `'containerId'`](#createcontent-options---containerid)
-*[`deleteContainer(id[, options])`](#deleteid-options)
-*[`update(container[, options])`](#updatecontainer-options)
-*[`update(id[, options])`](#updateid-options)
-*[`get(id[, options])`](#getid-options---container)
-**[`container`](#container)
-*[`getLatest([options])`](#getlatestoptions-----container--)
-*[`getAccessNotifications(id)`](#getaccessnotificationsid-----accessnotification--)
-**[`accessNotification`](#accessNotification)
-*[`getBackupReminder(userId)`](#getbackupreminderuserid---reminder-for-the-backup-passphrase)
-*[`resetPassword(userId, backupPassphrase, newPassword)`](#resetpassworduserid-backuppassphrase-newpassword)
-*[`changePassword(backupPassphrase, currentPassword, newPassword)`](#changepasswordbackuppassphrase-currentpassword-newpassword)
-*[`changeBackupCredentials(currentPassphrase, currentPassword, newReminder, newPassphrase)`](#changebackupcredentialscurrentpassphrase-currentpassword-newreminder-newpassphrase)
-*[`hash(seed)` ](#hashseed---hashedstring)
+* Container
+  * [`create(content[, options])` -> `'containerId'`](#createcontent-options---containerid)
+  * [`deleteContainer(id[, options])`](#deleteid-options)
+  * [`get(id[, options])`](#getid-options---container)
+    * [`container`](#container)
+  * [`getLatest([options])`](#getlatestoptions-----container--)
+  * [`getAccessNotifications(id)`](#getaccessnotificationsid-----accessnotification--)
+    * [`accessNotification`](#accessNotification)
+  * [`update(container[, options])`](#updatecontainer-options)
+  * [`update(id[, options])`](#updateid-options)
+* General
+  * [`hash(seed)` ](#hashseed---hashedstring)
+  * [`initialize(serverUrl, apiKey[, options])`](#initializeserverurl-apikey-options)
+* User Accounts
+  * [`changeBackupCredentials(currentPassphrase, currentPassword, newReminder, newPassphrase)`](#changebackupcredentialscurrentpassphrase-currentpassword-newreminder-newpassphrase)
+  * [`changePassword(backupPassphrase, currentPassword, newPassword)`](#changepasswordbackuppassphrase-currentpassword-newpassword)
+  * [`getBackupReminder(userId)`](#getbackupreminderuserid---reminder-for-the-backup-passphrase)
+  * [`logIn(userId, password, backupPassphrase[, options])`](#loginuserid-password-backuppassphrase-options)
+  * [`register(password, question, backupPassphrase)`](#registerpassword-question-backuppassphrase---userid)
+  * [`resetPassword(userId, backupPassphrase, newPassword)`](#resetpassworduserid-backuppassphrase-newpassword)
 
 ### `initialize(serverUrl, apiKey[, options])`
 This method must be called first to initialize the library.
