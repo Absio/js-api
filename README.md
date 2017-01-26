@@ -17,7 +17,7 @@ TODO
 TODO
 
 ## Getting Started
-The `userId`, `password`, and `answer` used below are the credentials for two existing users.  To simplify the example the users are called Alice and Bob. [Users](#users) can be created with the `register()` method or with our web-based secure user creation utility. For more details see the [Users](#users) section above.
+The `userId`, `password`, and `backupPassphrase` used below are the credentials for two existing users.  To simplify the example the users are called Alice and Bob. [Users](#users) can be created with the `register()` method or with our web-based secure user creation utility. For more details see the [Users](#users) section above.
 
 1. Installation:
 
@@ -244,10 +244,10 @@ Option | Type  | Default | Description
 
 ---
 
-### `register(password, question, answer)` -> `'userId'`
-**Important:** The `password` and `answer` should be kept secret.  We recommend using long and complex values with numbers and/or symbols.  Do not store them publicly in plain text.
+### `register(password, question, backupPassphrase)` -> `'userId'`
+**Important:** The `password` and `backupPassphrase` should be kept secret.  We recommend using long and complex values with numbers and/or symbols.  Do not store them publicly in plain text.
 
-Generates private keys and registers a new user on the API server.  This user's private keys are encrypted with the `password` to produce a key file.  The `answer` is used to reset the password and download the key file. Our web-based user creation utility can also be used to securely generate static users.
+Generates private keys and registers a new user on the API server.  This user's private keys are encrypted with the `password` to produce a key file.  The `backupPassphrase` is used to reset the password and download the key file. Our web-based user creation utility can also be used to securely generate static users.
 
 Returns a Promise that resolves to the new user's ID.
 
@@ -256,13 +256,13 @@ Throws an Error if the connection is unavailable.
 Parameter   | Type  | Description
 :-----------|:------|:-----------
 `password` | String | The password used to encrypt the key file.
-`question` | String | The question should only be used as a hint to remember the answer. This string is stored in plain text and should not contain sensitive information.
-`answer` | String | The answer used to reset the password or retrieve the key file from the server.
+`question` | String | The question should only be used as a hint to remember the `backupPassphrase`. This string is stored in plain text and should not contain sensitive information.
+`backupPassphrase` | String | The `backupPassphrase` used to reset the password or retrieve the key file from the server.
 
 ---
 
-### `logIn(userId, password, answer[, options])`
-Decrypts the key file containing the user's private keys with the provided password.  If the decryption succeeds, then a private key will be used to authenticate with the server.  If the key file is not cached locally, the answer is used to download the key file.
+### `logIn(userId, password, backupPassphrase[, options])`
+Decrypts the key file containing the user's private keys with the provided password.  If the decryption succeeds, then a private key will be used to authenticate with the server.  If the key file is not cached locally, the `backupPassphrase` is used to download the key file.
 
 Returns a Promise.
 
@@ -272,7 +272,7 @@ Parameter   | Type  | Description
 :-----------|:------|:-----------
 `userId` | String | The userId value is returned at registration.  Call `register()` or use our [user creation interface](TODO place url here).
 `password` | String | The password used to decrypt the key file.
-`answer` | String | The answer used to reset the password or retrieve the key file from the server.
+`backupPassphrase` | String | The `backupPassphrase` used to reset the password or retrieve the key file from the server.
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
@@ -318,16 +318,31 @@ Option | Type  | Default | Description
 ---
 
 ### `update(container[, options])`
-TODO based on confluence feedback
+
+Updates the changed fields of the specified [container](#container). Both the local and server copies of the secured container will be updated, unless specified in the `uploadToServer` option.
+
+Returns a Promise.
+
+Throws an Error if the connection is unavailable or an ID is not found.
+
+Parameter   | Type  | Description
+:-----------|:------|:-----------
+[`container`](#container) | Object | The container object that has been updated after being returned from `get()`.
+
+
+Option | Type  | Default | Description
+:------|:------|:--------|:-----------
+`uploadToServer` | boolean | `true` | By default we upload the secured container to the server for backup and granting access.  Set to `false` to prevent server storage of encrypted containers.
 
 ---
 
 ### `update(id[, options])`
+
 Updates the container with the specified ID. At least one optional parameters must be provided for an update to occur.
 
 Returns a Promise.
 
-Throws an Error if the connection is unavailable or an access userId is not found.
+Throws an Error if the connection is unavailable or an ID is not found.
 
 Parameter   | Type  | Description
 :------|:------|:-----------
@@ -336,12 +351,17 @@ Parameter   | Type  | Description
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
-|||TODO Add all rows from `create` when finalized
+`access` | Array of user IDs (String) or [accessInformation](#accessInformation) for setting permissions and expiration | `[]`, if not defined in initialize options | The access granted to the container on upload.
 `content` | [Buffer](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html) | null | The content to update.
+`header` | Object | `{}` | Use this to store any metadata about the content.  This data is independently encrypted and can be retrieved prior to downloading and decrypting the full content.
+`uploadToServer` | boolean | `true` | By default we upload the secured container to the server for backup and granting access.  Set to `false` to prevent server storage of encrypted containers.
+`type` | String | `null` | A string used to categorize the container on the server.
+
 
 ---
 
 ### `get(id[, options])` -> [container](#container)
+
 Gets the secured container and decrypts it for usage. By default it downloads any required data, includes the content, and caches downloaded data locally.  Only encrypted data is cached locally and it is stored in an Obfuscated File System.  See the options for overriding this behavior.
 
 Returns a Promise that resolves to a [container](#container)
@@ -391,6 +411,7 @@ Option | Type  | Default | Description
 ---
 
 ### `getLatest([options])` -> [`[ { container } ]`](#container)
+
 Downloads and decrypts any new or updated containers. This will return all new containers since the last call of this method, unless specified in `options`. Options can be used to change the criteria for the containers returned by this method.
 
 Returns a Promise that resolves to an Array of [containers](#container).
@@ -410,13 +431,16 @@ Option | Type  | Default | Description
 ---
 
 ### `delete(id[, options])`
+
 Deletes the container from the server and revokes access for all users, unless specified in options. Any data relating to this container will be deleted from the local Obfuscated File System.
 
 Returns a Promise.
 
+Throws an Error if the ID is not found or a connection is unavailable.
+
 Parameter   | Type  | Description
 :------|:------|:-----------
-`id` | String | The ID of the container to delete
+`id` | String | The ID of the container to delete.
 `options` | Object [optional] | See table below.
 
 Option | Type  | Default | Description
@@ -426,30 +450,83 @@ Option | Type  | Default | Description
 ---
 
 ### `getAccessNotifications(id)` -> [`[ { accessNotification } ]`](#accessNotification)
-TODO
+
+Gets the dates that users first accessed the secured container on the server.
+
+Returns a promise that resolves to an Array of [accessNotification](#accessNotification).
+
+Throws an Error if the ID is not found or a connection is unavailable.
+
+Parameter   | Type  | Description
+:------|:------|:-----------
+`id` | String | The ID of the container.
 
 #### accessNotification
-TODO
+``` javascript
+{
+    userId: 'userIdThatAccessed'
+    firstAccessed: Date() // Date first accessed by corresponding userId
+}
+```
 
 ---
 
-`getSecurityQuestion(userId)` -> `'security question for the current user'`
-TODO
+### `getBackupReminder(userId)` -> `'Reminder for the backup passphrase'`
+Gets the publicly accessible reminder for the user's backup passphrase.  If no ID is provided, the user ID for the currently logged in user will be used.
+
+Returns a Promise that resolves to the user's reminder.
+
+Throws an exception if the connection is unavailable.
+
+Parameter   | Type  | Description
+:-----------|:------|:-----------
+`userId` | String | A string ID representing the user.
 
 ---
 
-`resetPassword(currentAnswer, newPassword)`
-TODO
+### `resetPassword(userId, backupPassphrase, newPassword)`
+If user's password is forgotten, then use this to reset a user's password. Call `getBackupReminder(userId)` to get the reminder for the `backupPassphrase`.
+
+Returns a Promise.
+
+Throws an Error if the `backupPassphrase` is incorrect or user ID is not found.
+
+Parameter   | Type  | Description
+:-----------|:------|:-----------
+`userId` | String | A string ID representing the user.
+`backupPassphrase` | String | The `backupPassphrase` setup during registration of the account.  This is used to reset the password.
+`newPassword` | String | The new password for the user.
 
 ---
 
-`changePassword(currentAnswer, currentPassword, newPassword)`
-TODO
+### `changePassword(backupPassphrase, currentPassword, newPassword)`
+Change the password for the current user.  The current `backupPassphrase` is required for updating the backup.
+
+Returns a Promise.
+
+Throws an Error if the `backupPassphrase` or `currentPassword` is incorrect.
+
+Parameter   | Type  | Description
+:-----------|:------|:-----------
+`backupPassphrase` | String | The `backupPassphrase` setup during registration of the account.  This is used to reset the password.
+`currentPassword` | String | The current password for the user.
+`newPassword` | String | The new password for the user.
 
 ---
 
-`changeQuestionAndAnswer(currentAnswer, currentPassword, newQuestion, newAnswer)`
-TODO
+### `changeBackupCredentials(currentPassphrase, currentPassword, newReminder, newPassphrase)`
+Change the backup credentials for the account.  Use a secure value for the passphrase as it can be used to reset the user's password.
+
+Returns a Promise.
+
+Throws an Error if the `currentPassphrase` or `currentPassword` is incorrect.  
+
+Parameter   | Type  | Description
+:-----------|:------|:-----------
+`currentBackupPassphrase` | String | The current `backupPassphrase` setup during registration of the account.
+`currentPassword` | String | The current password for the user.
+`newReminder` | String | The new backup reminder for the user's passphrase.  The reminder is publicly available in plain text.  Do not include sensitive information or wording that allows the passphrase to be easily compromised.
+`newPassphrase` | String | The new backup passphrase for the user.  Use a secure value for this.  This can be used to reset the password for the user's account.
 
 ---
 
