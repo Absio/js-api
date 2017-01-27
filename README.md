@@ -34,7 +34,9 @@ For protecting your application's data we use AES256 [encryption](#encryption) w
 * The seed for obfuscation combines user, application, and server information to partition the data.
 
 ### Encryption
-* A user's private keys are AES256 encrypted with a key derived from the user's password using the Password Based Key Derivation Function 2 (PBKDF2).
+* A user's private keys are stored in [Key File](#key-file) encrypted with AES256 using a key derived from the user's password.
+  * A [Key File](#key-file) contains both signing and derivation private keys.
+  * The password-based encryption key is derived using the Password Based Key Derivation Function 2 (PBKDF2).
 * Every Absio Secured Container has a unique set of private keys.
   * HMAC-SHA256 keys are used for digest and validation.
   * AES256 keys are used to individually encrypt the header and content of the Secured Container.
