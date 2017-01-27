@@ -1,5 +1,7 @@
 # Absio Secured Container
 
+Protect your application's sensitive data with Absio's Secured Containers.  We use
+
 ## Index
 
 * [Overview](#overview)
@@ -8,10 +10,27 @@
 * [API](#api)
 
 ## Overview
-TODO - general
+For protecting your application's data we use AES256 [encryption](#encryption) with unique keys for each Absio Secured Container.  Keys are derived with a [User's](#users) private keys, which are encrypted and stored in a [Key File](#key-file).  For offline access and efficiency Secured Containers are stored in Absio's [Obfuscated File System](#obfuscated-file-system).
+
+### Asynchronous
+* TODO - finish
+* All functions return a Promise and execute asynchronously, except for [`initialize()`](#initializeserverurl-apikey-options).
 
 ### Users
-TODO
+* Users represent entities that have a [Key File](#key-file) containing their own set of private keys.  
+* Create users with the [`register()`](#registerpassword-question-backuppassphrase---userid) function.
+* Each user can create Secured Containers that are uniquely [encrypted](#encryption) with keys derived from that user's private keys.  Optionally a user can grant access to a container for sharing with limited permissions or expiration.  
+
+### Key File
+* A [user's](#users) Key File is an AES256 [encrypted](#encryption) file containing private keys and password recovery.  
+* A [user's](#users) password is used to generate the keys to encrypt the portion of the Key File with private keys during [registration](#registerpassword-question-backuppassphrase---userid).  This mechanism allows for Absio Secured Containers to be accessible offline.
+* A backup passphrase can be provided to encrypt the password recovery portion of the Key File.
+
+### Obfuscated File System
+* All Secured Containers and [Key Files](#key-file) are stored securely by default in Absio's Obfuscated File System.  
+* This library automatically obfuscates the names and randomizes folder structure of the encrypted files.  
+* This increases security by making attacks on the individually [encrypted](#encryption) containers more difficult.
+* The seed for obfuscation combines user, application, and server information to partition the data.
 
 ### Encryption
 TODO
@@ -24,6 +43,7 @@ The `userId`, `password`, and `backupPassphrase` used below are the credentials 
    ```
    npm install absio-secured-container
    ```
+
 2. Import as regular module and initialize:
 
    ``` javascript
@@ -263,7 +283,7 @@ async function processUpdatedReports() {
   * [initialize(serverUrl, apiKey[, options])](#initializeserverurl-apikey-options)
 * User Accounts
   * [changeBackupCredentials(currentPassphrase, currentPassword, newReminder, newPassphrase)](#changebackupcredentialscurrentpassphrase-currentpassword-newreminder-newpassphrase)
-  * [changePassword(backupPassphrase, currentPassword, newPassword)](#changepasswordbackuppassphrase-currentpassword-newpassword)
+  * [changePassword(currentPassphrase, currentPassword, newPassword)](#changepasswordcurrentpassphrase-currentpassword-newpassword)
   * [getBackupReminder(userId)](#getbackupreminderuserid---reminder-for-the-backup-passphrase)
   * [logIn(userId, password, backupPassphrase[, options])](#loginuserid-password-backuppassphrase-options)
   * [register(password, question, backupPassphrase)](#registerpassword-question-backuppassphrase---userid)
