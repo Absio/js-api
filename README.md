@@ -19,7 +19,8 @@ For protecting your application's data we use AES256 [encryption](#encryption) w
 ### Users
 * Users represent entities that have a [Key File](#key-file) containing their own set of private keys.  
 * Create users with the [`register()`](#registerpassword-question-backuppassphrase---userid) function.
-* Each user can create Secured Containers that are uniquely [encrypted](#encryption) with keys derived from that user's private keys.  Optionally a user can grant access to a container for sharing with limited permissions or expiration.  
+* Each user can [create](#createcontent-options---containerid) Secured Containers that are uniquely [encrypted](#encryption) with keys derived from that user's private keys.  
+* Optionally a user can grant [access](#accessinformation) to a container for sharing with unique permissions or expiration to another set of users.
 
 ### Key File
 * A [user's](#users) Key File is an AES256 [encrypted](#encryption) file containing private keys and password recovery.  
