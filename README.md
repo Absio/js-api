@@ -10,7 +10,7 @@ Protect your application's sensitive data with Absio's Secured Containers.  We u
 * [API](#api)
 
 ## Overview
-For protecting your application's data we use AES256 [encryption](#encryption) with unique keys for each Absio Secured Container.  Keys are derived with a [User's](#users) private keys, which are encrypted and stored in a [Key File](#key-file).  For offline access and efficiency Secured Containers are stored in Absio's [Obfuscated File System](#obfuscated-file-system).
+For protecting your application's data we use AES256 [encryption](#encryption) with unique keys for each Absio Secured Container.  Keys are derived with a [User's](#users) private keys, which are encrypted and stored in a [Key File](#key-file).  For offline access and efficiency the Secured Containers are stored in Absio's [Obfuscated File System](#obfuscated-file-system).
 
 ### Asynchronous
 * TODO - finish
@@ -34,7 +34,14 @@ For protecting your application's data we use AES256 [encryption](#encryption) w
 * The seed for obfuscation combines user, application, and server information to partition the data.
 
 ### Encryption
-TODO
+* A user's private keys are AES256 encrypted with a key derived from the user's password using the Password Based Key Derivation Function 2 (PBKDF2).
+* Every Absio Secured Container has a unique set of private keys.
+  * HMAC-SHA256 keys are used for digest and validation.
+  * AES256 keys are used to individually encrypt the header and content of the Secured Container.
+* The private keys for an Absio Secured Container are uniquely encrypted for each user that can access the container.
+  * This encryption of the private keys uses Static-ephemeral Diffie-Hellman Key Exchange (DHKE) based upon a user's public derivation key.
+  * This process encrypts the private keys such that they can only be decrypted with the user's corresponding private derivation key.
+
 
 ## Getting Started
 The `userId`, `password`, and `backupPassphrase` used below are the credentials for two existing users.  To simplify the example the users are called Alice and Bob. [Users](#users) can be created with the `register()` method or with our web-based secure user creation utility. For more details see the [Users](#users) section above.
