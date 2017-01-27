@@ -1,6 +1,6 @@
 # Absio Secured Container
 
-Protect your application's sensitive data with Absio's Secured Containers.  We use
+Protect your application's sensitive data with Absio's Secured Containers.
 
 ## Index
 
