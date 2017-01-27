@@ -16,9 +16,9 @@ For protecting your application's data we use AES256 [encryption](#encryption) w
 * All Secured Container functions return a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) and execute asynchronously, except for [`initialize()`](#initializeserverurl-apikey-options).
   * Use the existing [`.then()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then) and [`.catch()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch) methods to handle the promises.
   * Execute multiple asynchronous Secured Container methods in parallel using [`Promise.all()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all) or [`Promise.race()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/race).
-* Optionally use the async-await syntax enabled by [Babel](https://babeljs.io/) as shown in the [Usage](#usage) section.
-* For greater browser support we suggest using [ES6 Promise](https://github.com/stefanpenner/es6-promise).
 * If this prevents you from using Absio Secured Container in your application, then please contact us.
+* Optionally use the async-await syntax enabled by [Babel](https://babeljs.io/) as shown in the [Usage](#usage) section.
+* For greater browser support we suggest using the [ES6 Promise](https://github.com/stefanpenner/es6-promise) polyfill.
 
 ### Users
 * Users represent entities that have a [Key File](#key-file) containing their own set of private keys.  
