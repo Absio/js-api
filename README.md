@@ -13,8 +13,12 @@ Protect your application's sensitive data with Absio's Secured Containers.
 For protecting your application's data we use AES256 [encryption](#encryption) with unique keys for each Absio Secured Container.  Keys are derived with a [User's](#users) private keys, which are encrypted and stored in a [Key File](#key-file).  For offline access and efficiency the Secured Containers are stored in Absio's [Obfuscated File System](#obfuscated-file-system).
 
 ### Asynchronous
-* TODO - finish
-* All functions return a Promise and execute asynchronously, except for [`initialize()`](#initializeserverurl-apikey-options).
+* All Secured Container functions return a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) and execute asynchronously, except for [`initialize()`](#initializeserverurl-apikey-options).
+  * Use the existing [`.then()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then) and [`.catch()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch) methods to handle the promises.
+  * Execute multiple asynchronous Secured Container methods in parallel using [`Promise.all()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all) or [`Promise.race()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/race).
+* Optionally use the async-await syntax enabled by [Babel](https://babeljs.io/) as shown in the [Usage](#usage) section.
+* For greater browser support we suggest using [ES6 Promise](https://github.com/stefanpenner/es6-promise).
+* If this prevents you from using Absio Secured Container in your application, then please contact us.
 
 ### Users
 * Users represent entities that have a [Key File](#key-file) containing their own set of private keys.  
@@ -36,7 +40,7 @@ For protecting your application's data we use AES256 [encryption](#encryption) w
 ### Encryption
 * A user's private keys are stored in [Key File](#key-file) encrypted with AES256 using a key derived from the user's password.
   * A [Key File](#key-file) contains both signing and derivation private keys.
-  * The password-based encryption key is derived using the Password Based Key Derivation Function 2 (PBKDF2).
+  * The encryption key is derived using the Password Based Key Derivation Function 2 (PBKDF2).
 * Every Absio Secured Container has a unique set of private keys.
   * HMAC-SHA256 keys are used for digest and validation.
   * AES256 keys are used to individually encrypt the header and content of the Secured Container.
