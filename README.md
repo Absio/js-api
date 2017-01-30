@@ -10,7 +10,7 @@ Protect your application's sensitive data with Absio's Secured Containers.
 * [API](#api)
 
 ## Overview
-We use AES256 [encryption](#encryption) with unique keys for each Absio Secured Container to protect your application's data.  Keys are derived with a [User's](#users) private keys, which are encrypted and stored in a [Key File](#key-file).  For offline access and efficiency the Secured Containers are stored in Absio's [Obfuscated File System](#obfuscated-file-system).
+We use AES256 [encryption](#encryption) with unique keys for each Absio Secured Container to protect your application's data.  For offline access and efficiency the Secured Containers are stored in Absio's [Obfuscated File System](#obfuscated-file-system).
 
 ### Asynchronous
 * All Secured Container functions return a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) and execute asynchronously, except for [`initialize()`](#initializeserverurl-apikey-options).
@@ -21,32 +21,33 @@ We use AES256 [encryption](#encryption) with unique keys for each Absio Secured 
 * For greater browser support we suggest using the [ES6 Promise](https://github.com/stefanpenner/es6-promise) polyfill.
 
 ### Users
-* Users represent entities that have a [Key File](#key-file) containing their own set of private keys.  
+* A user is an entity that has its own set of private keys.  
 * Create users with the [`register()`](#registerpassword-question-backuppassphrase---userid) function.
-* Each user can [create](#createcontent-options---containerid) Secured Containers that are uniquely [encrypted](#encryption) with keys derived from that user's private keys.  
+* Each user can [create](#createcontent-options---containerid) Secured Containers that are uniquely [encrypted](#encryption).
 * Optionally a user can grant [access](#accessinformation) to a container for sharing with unique permissions or expiration to another set of users.
 
 ### Key File
-* A [user's](#users) Key File is an AES256 [encrypted](#encryption) file containing private keys and password recovery.  
-* A [user's](#users) password is used to generate the keys to encrypt the portion of the Key File with private keys during [registration](#registerpassword-question-backuppassphrase---userid).  This mechanism allows for Absio Secured Containers to be accessible offline.
-* A backup passphrase can be provided to encrypt the password recovery portion of the Key File.
+* A [user's](#users) Key File is an AES256 [encrypted](#encryption) file containing private keys and password reset.  
+* A [user's](#users) password is used to encrypt their private keys.  This mechanism allows Absio Secured Containers to be accessible offline.
+* A backup passphrase can be provided to encrypt the password reset portion of the Key File.
 
 ### Obfuscated File System
-* All Secured Containers and [Key Files](#key-file) are stored securely by default in Absio's Obfuscated File System.  
+* All Secured Containers and [Key Files](#key-file) can be securely in Absio's Obfuscated File System.  
 * This library automatically obfuscates the names and randomizes folder structure of the encrypted files.  
-* This increases security by making attacks on the individually [encrypted](#encryption) containers more difficult.
+* Increases security by making attacks on the individually [encrypted](#encryption) containers more difficult.
 * The seed for obfuscation combines user, application, and server information to partition the data.
 
 ### Encryption
 * A user's private keys are stored in [Key File](#key-file) encrypted with AES256 using a key derived from the user's password.
   * A [Key File](#key-file) contains both signing and derivation private keys.
   * The encryption key is derived using the Password Based Key Derivation Function 2 (PBKDF2).
-* Every Absio Secured Container has a unique set of private keys.
+* Every Absio Secured Container has a unique set of secret keys.
+  * Secret Keys are encrypted and used to securely access the container.
   * HMAC-SHA256 keys are used for digest and validation.
   * AES256 keys are used to individually encrypt the header and content of the Secured Container.
-* The private keys for an Absio Secured Container are uniquely encrypted for each user that can access the container.
-  * This encryption of the private keys uses Static-ephemeral Diffie-Hellman Key Exchange (DHKE) based upon a user's public derivation key.
-  * This process encrypts the private keys such that they can only be decrypted with the user's corresponding private derivation key.
+* The secret keys for an Absio Secured Container are uniquely encrypted for each user that can access the container.
+  * This encryption of the secret keys uses Static-ephemeral Diffie-Hellman Key Exchange (DHKE) based upon a user's public derivation key.
+  * This process encrypts the secret keys such that they can only be decrypted with the user's corresponding private derivation key.
 
 
 ## Getting Started
