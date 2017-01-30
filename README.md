@@ -10,7 +10,7 @@ Protect your application's sensitive data with Absio's Secured Containers.
 * [API](#api)
 
 ## Overview
-For protecting your application's data we use AES256 [encryption](#encryption) with unique keys for each Absio Secured Container.  Keys are derived with a [User's](#users) private keys, which are encrypted and stored in a [Key File](#key-file).  For offline access and efficiency the Secured Containers are stored in Absio's [Obfuscated File System](#obfuscated-file-system).
+We use AES256 [encryption](#encryption) with unique keys for each Absio Secured Container to protect your application's data.  Keys are derived with a [User's](#users) private keys, which are encrypted and stored in a [Key File](#key-file).  For offline access and efficiency the Secured Containers are stored in Absio's [Obfuscated File System](#obfuscated-file-system).
 
 ### Asynchronous
 * All Secured Container functions return a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) and execute asynchronously, except for [`initialize()`](#initializeserverurl-apikey-options).
