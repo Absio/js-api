@@ -24,8 +24,7 @@ We use AES256 [encryption](#encryption) with unique keys for each Absio Secured 
 * A user is an entity that has its own set of private keys.  
 * Create users with the [`register()`](#registerpassword-question-backuppassphrase---userid) function.
 * A user's public keys are registered with an Absio Server under a static User ID.
-  * Public keys are publicly available to other users for granting access to containers.
-  * Public keys are used by the server to validate user actions.
+  * Public keys are used by the server to validate user actions and are published to other users for granting access to containers.
 * Each user can [create](#createcontent-options---containerid) Secured Containers that are uniquely [encrypted](#encryption).
 * Optionally a user can grant [access](#accessinformation) to a container for sharing with unique permissions or expiration to another set of users.
 
@@ -200,7 +199,7 @@ Encrypt unstructured data and share with the Trusted Data Broker.
 ``` javascript
 async function shareUnstructuredData(unstructuredData) {
     const containerOptions = {
-        access: [trustedDataBrokerID],
+        access: [trustedDataBrokerId],
         type: 'unstructured-data'
     };
 
@@ -208,10 +207,20 @@ async function shareUnstructuredData(unstructuredData) {
 }
 ```
 
-Get report container events and corresponding secured containers. Then update the report based upon validity.
+Get report container events and corresponding secured containers. Then update the reports based upon validity.
 
 ``` javascript
-// TODO
+
+async function updateReportsForValidity() {
+    const reportContainerEvents = await securedContainer.getLastestEvents({ containerType: 'report' });
+
+    for (let reportEvent of reportContainerEvents) {
+        const reportContainer = await securedContainer.get(reportEvent.containerId);
+
+        reportContainer.content = processReportForValidity(reportContainer.content);
+        await securedContainer.update(reportContainer);
+    }
+}
 
 ```
 
@@ -221,7 +230,7 @@ Get unstructured data and convert into NetFlow format and obfuscated data map.  
 
 ``` javascript
 async function processUnstructuredData() {
-    const unstructuredDataEvents = await securedContainer.getLastestEvents({ type: 'unstructured-data' });
+    const unstructuredDataEvents = await securedContainer.getLastestEvents({ containerType: 'unstructured-data' });
 
     for (let containerEvent of unstructuredDataEvents) {
         const container = securedContainer.get(containerEvent.containerId);
@@ -234,8 +243,8 @@ async function processUnstructuredData() {
 
 async function shareNetFlowData(netFlowData) {
     const containerOptions = {
-        access: [analysisSystemID],
-        type: 'net-flow-data'
+        access: [analysisSystemId],
+        containerType: 'net-flow-data'
     };
 
     await securedContainer.create(netFlowData, containerOptions);
@@ -243,7 +252,7 @@ async function shareNetFlowData(netFlowData) {
 
 async function shareObfuscatedDataMap(obfuscatedDataMap) {
     const containerOptions = {
-        access: [customerSystemID],
+        access: [customerSystemId],
         type: 'obfuscated-data-map'
     };
 
@@ -251,28 +260,75 @@ async function shareObfuscatedDataMap(obfuscatedDataMap) {
 }
 ```
 
-Get report container events and grant additional access back to the [Customer System](#customer-system).
+Get added report container events and redefine the access and corresponding permissions. The redefined permissions ensure that the [Customer System](#customer-system) and [Analysis System](#analysis-system) cannot know about each other, while still maintaining read and write access to the report.
 
 ``` javascript
-// TODO based on feedback in confluence about hideAccess permissions
+const limitedPermissions = {
+    read: true,
+    write: true,
+    modifyAccess: false,
+    viewAccess: false
+}
 
+const redefinedAccess = [
+    {
+        userId: analysisSystemId,
+        permissions: {
+            read: true,
+            write: true,
+            modifyAccess: true,
+            viewAccess: true
+        }    
+    },
+    {
+        userId: customerSystemId,
+        permissions: limitedPermissions
+    },
+    {
+        userId: analysisSystemId,
+        permissions: limitedPermissions
+    }
+]
+
+async function redefineReportAccess() {
+    const reportContainerEvents = await securedContainer.getLatestEvents({
+        eventAction: 'added'
+        containerType: 'report',
+    });
+
+    for (let reportEvent of reportContainerEvents) {
+        await securedContainer.update(reportEvent.containerId, {
+            access: redefinedAccess
+        });
+    }
+}
 ```
 
 #### Analysis System
 
-Get the containers with NetFlow formatted data.  After performing analysis on the data, create a Secured Container that the [Trusted Data Broker](#trusted-data-broker) can access.
+Get the containers with NetFlow formatted data.  After performing analysis on the data, create a Secured Container that the [Trusted Data Broker](#trusted-data-broker) can access with full permissions.
 
 ``` javascript
 async function processNetFlowData() {
-    const netFlowContainerEvents = await securedContainer.getLastestEvents({ type: 'net-flow-data' });
+    const netFlowContainerEvents = await securedContainer.getLastestEvents({ containerType: 'net-flow-data' });
+
+    const reportContainerAccess = [{
+        userId: trustedDataBrokerId,
+        permissions: {
+            read: true,
+            write: true,
+            modifyAccess: true,
+            viewAccess: true
+        }
+    }];
 
     for (let containerEvent of netFlowContainerEvents) {
         const container = await securedContainer.get(containerEvent.containerId);
         const report = performAnalysis(container.content);
 
         await securedContainer.create(report, {
-            access: [trustedDataBrokerID],
-            type: 'report'
+            access: reportContainerAccess,
+            containerType: 'report'
         });
     }
 }
@@ -283,7 +339,7 @@ Get containers with reports updated by the [Customer System](#customer-system). 
 ``` javascript
 async function processUpdatedReports() {
     const updatedReportEvents = await securedContainer.getLastestEvents({
-        type: 'report'
+        containerType: 'report'
         eventAction: 'updated'
     });
 
