@@ -23,13 +23,15 @@ We use AES256 [encryption](#encryption) with unique keys for each Absio Secured 
 ### Users
 * A user is an entity that has its own set of private keys.  
 * Create users with the [`register()`](#registerpassword-question-backuppassphrase---userid) function.
+* A user's public keys are registered with an Absio Server under a static User ID.
+  * Public keys are used by the server to validate user actions and are published to other users for granting access to containers.
 * Each user can [create](#createcontent-options---containerid) Secured Containers that are uniquely [encrypted](#encryption).
 * Optionally a user can grant [access](#accessinformation) to a container for sharing with unique permissions or expiration to another set of users.
 
 ### Key File
 * A [user's](#users) Key File is an AES256 [encrypted](#encryption) file containing private keys and password reset.  
 * A [user's](#users) password is used to encrypt their private keys.  This mechanism allows Absio Secured Containers to be accessible offline.
-* A backup passphrase can be provided to encrypt the password reset portion of the Key File.
+* A backup passphrase can be provided to synchronize a Key File between devices and enable a secure password reset.
 
 ### Obfuscated File System
 * All Secured Containers and [Key Files](#key-file) can be securely in Absio's Obfuscated File System.  
@@ -42,12 +44,13 @@ We use AES256 [encryption](#encryption) with unique keys for each Absio Secured 
   * A [Key File](#key-file) contains both signing and derivation private keys.
   * The encryption key is derived using the Password Based Key Derivation Function 2 (PBKDF2).
 * Every Absio Secured Container has a unique set of secret keys.
-  * Secret Keys are encrypted and used to securely access the container.
-  * HMAC-SHA256 keys are used for digest and validation.
+  * Secret Keys are stored encrypted and used to securely access the container.
+  * HMAC-SHA256 keys are used for content validation to mitigate content tampering.
   * AES256 keys are used to individually encrypt the header and content of the Secured Container.
 * The secret keys for an Absio Secured Container are uniquely encrypted for each user that can access the container.
   * This encryption of the secret keys uses Static-ephemeral Diffie-Hellman Key Exchange (DHKE) based upon a user's public derivation key.
   * This process encrypts the secret keys such that they can only be decrypted with the user's corresponding private derivation key.
+  * Encrypted container keys are signed with the creator's private keys to mitigate Man-in-the-Middle attacks.
 
 
 ## Getting Started
@@ -87,7 +90,7 @@ The `userId`, `password`, and `backupPassphrase` used below are the credentials 
 
    ``` javascript
    await securedContainer.logIn(bobsId, bobsPassword, bobsBackupPassphrase);
-   const latestContainers = await securedContainer.getLatest();
+   const latestContainers = await securedContainer.getLastestEvents();
 
    // Also can use a known container ID returned from create.
    const container = await securedContainer.get(knownContainerId);
@@ -113,16 +116,14 @@ const containerHeader = {
 
 // Optional: Grant access to the container with permissions and/or expiration.
 const containerAccess = [{
-    {
-        userId: trustedSystemId,
-        expiration: new Date(2022)
-        permissions: {
-            read: true,
-            write: false,
-            modifyAccess: false
-        }
+    userId: trustedSystemId,
+    expiration: new Date(2022)
+    permissions: {
+        read: true,
+        write: false,
+        modifyAccess: false
     }
-];
+}];
 
 // Create the container
 const containerId = await securedContainer.create(sensitiveData, {
@@ -139,11 +140,18 @@ This demonstrates the ways to get containers.
 // Get the content with a known ID
 const container = await securedContainer.get(knownContainerId);
 
-// The application expects to be granted access to one or more containers.
-const latestContainers = await securedContainer.getLatest();
+// The API Server creates an event for when a container is new, updated, deleted, or first accessed.
+const latestEvents = await securedContainer.getLastestEvents();
 
-// This can be narrowed further to return only the latest of a given type.
-const latestOfType = await securedContainer.getLatest({ type: 'exampleType' });
+// Events contain the corresponding container ID for getting the related container.
+const eventContainerId = latestEvents[0].containerId;
+const containerFromEvent = await securedContainer.get(eventContainerId);
+
+// Optionally can be filtered to return only the latest events of a given container type and/or event action.
+const latestUpdatedOfType = await securedContainer.getLastestEvents({
+    containerType: 'exampleType',
+    eventAction: 'updated'
+});
 ```
 
 
@@ -212,9 +220,10 @@ Get unstructured data and convert into NetFlow format and obfuscated data map.  
 
 ``` javascript
 async function processUnstructuredData() {
-    const unstructuredDataContainers = await securedContainer.getLatest({ type: 'unstructured-data' });
+    const unstructuredDataEvents = await securedContainer.getLastestEvents({ type: 'unstructured-data' });
 
-    for (let container of unstructuredDataContainers) {
+    for (let containerEvent of unstructuredDataEvents) {
+        const container = securedContainer.get(containerEvent.containerId);
         const results = createNetFlowDataWithDataMap(container.content);
 
         await shareNetFlowData(results.netFlowFormat);
@@ -254,9 +263,10 @@ Get the containers with NetFlow formatted data.  After performing analysis on th
 
 ``` javascript
 async function processNetFlowData() {
-    const netFlowContainers = await securedContainer.getLatest({ type: 'net-flow-data' });
+    const netFlowContainerEvents = await securedContainer.getLastestEvents({ type: 'net-flow-data' });
 
-    for (let container of netFlowContainers) {
+    for (let containerEvent of netFlowContainerEvents) {
+        const container = await securedContainer.get(containerEvent.containerId);
         const report = performAnalysis(container.content);
 
         await securedContainer.create(report, {
@@ -271,12 +281,13 @@ Get containers with reports updated by the [Customer System](#customer-system). 
 
 ``` javascript
 async function processUpdatedReports() {
-    const updatedReportContainers = await securedContainer.getLatest({
+    const updatedReportEvents = await securedContainer.getLastestEvents({
         type: 'report'
-        updatesOnly: true
+        eventAction: 'updated'
     });
 
-    for (let reportContainer of updatedReportContainers) {
+    for (let reportEvent of updatedReportEvents) {
+        const reportContainer = await securedContainer.get(reportEvent.containerId);
         updateSystemForReport(reportContainer.content);
     }
 }
@@ -288,7 +299,7 @@ async function processUpdatedReports() {
   * [deleteContainer(id[, options])](#deleteid-options)
   * [get(id[, options])](#getid-options---container)
     * [container](#container)
-  * [getLatest([options])](#getlatestoptions-----container--)
+  * [getLastestEvents([options])](#getlatesteventsoptions-----container--)
   * [getAccessNotifications(id)](#getaccessnotificationsid-----accessnotification--)
     * [accessNotification](#accessnotification)
   * [update(container[, options])](#updatecontainer-options)
@@ -305,6 +316,7 @@ async function processUpdatedReports() {
   * [resetPassword(userId, backupPassphrase, newPassword)](#resetpassworduserid-backuppassphrase-newpassword)
 
 ### `initialize(serverUrl, apiKey[, options])`
+
 This method must be called first to initialize the library.
 
 Parameter   | Type  | Description
@@ -323,6 +335,7 @@ Option | Type  | Default | Description
 ---
 
 ### `register(password, reminder, backupPassphrase)` -> `'userId'`
+
 **Important:** The `password` and `backupPassphrase` should be kept secret.  We recommend using long and complex values with numbers and/or symbols.  Do not store them publicly in plain text.
 
 Generates private keys and registers a new user on the API server.  This user's private keys are encrypted with the `password` to produce a key file.  The `backupPassphrase` is used to reset the password and download the key file. Our web-based user creation utility can also be used to securely generate static users.
@@ -340,6 +353,7 @@ Parameter   | Type  | Description
 ---
 
 ### `logIn(userId, password, backupPassphrase[, options])`
+
 Decrypts the key file containing the user's private keys with the provided password.  If the decryption succeeds, then a private key will be used to authenticate with the server.  If the key file is not cached locally, the `backupPassphrase` is used to download the key file.
 
 Returns a Promise.
@@ -384,10 +398,11 @@ Option | Type  | Default | Description
 ```javascript
 {
     expiration: <null or Date()>,
-    permissions: { // Default permissions:
+    permissions: { // These are default permissions, if none are specified.
         read: true,
         write: false,
-        modifyAccess: false
+        modifyAccess: false,
+        viewAccess: true
     },
     userId: 'userIdGrantedAccess'
 }
@@ -480,7 +495,12 @@ Option | Type  | Default | Description
     access: [
         {
             expiration: <null or Date()>,
-            permissions: <"read", "read-write", "write">,
+            permissions: {
+                read: true,
+                write: false,
+                modifyAccess: false,
+                viewAccess: true
+            },
             userId: 'userIdWithAccess'
         },
         ...
@@ -501,11 +521,11 @@ Option | Type  | Default | Description
 
 ---
 
-### `getLatest([options])` -> [`[ { container } ]`](#container)
+### `getLastestEvents([options])` -> [`[ { containerEvent } ]`](#containerevent)
 
-Downloads and decrypts any new or updated containers. This will return all new containers since the last call of this method, unless specified in `options`. Options can be used to change the criteria for the containers returned by this method.
+Gets all new container events since the last call of this method, unless specified with `startingEventId` in `options`. Options can be used to change the criteria for the container events returned by this method.
 
-Returns a Promise that resolves to an Array of [containers](#container).
+Returns a Promise that resolves to an Array of [container events](#containerevent).
 
 Throws an Error if the connection is unavailable.
 
@@ -516,8 +536,24 @@ Parameter   | Type  | Description
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
 `startingEventId` | Number | `-1` | 0 will start from the beginning and download all containers for the current user.  Use the `storageInformation.latestEventId` field of the [container](#container) to start from existing successful event. -1 will download all new since last call.
-`type` | String | `null` | Only containers of the specified type will be downloaded. Type is a string used to categorize containers on the server.
-`updatesOnly` | boolean | `false` | Both new and updated data is included in the results by default. Set to `true` to only return updated containers.
+`containerType` | String | `null` | Only containers of the specified type will be downloaded. Type is a string used to categorize containers on the server.
+`eventAction` | String | `'all'` | All container actions are included in the results by default. Possible values are: `'all'`, `'accessed'`, `'added'`, `'deleted'`, or `'updated'`
+
+#### containerEvent
+
+``` javascript
+{
+  action: "Always one of 'accessed', 'added', 'deleted', or 'updated'.",
+  changes : "Information about what has changed. For example: { fieldThatChanged: 'updatedValue' }",
+  appName: "The name of the application responsible for the action, optionally specified in the initialize() method.",
+  date: "ISO formatted date string corresponding to when the event occurred.",
+  eventId: "An integer ID value for the event.",
+  containerId: "The ID for container that this event relates to.",
+  lastModified: "ISO formatted date string corresponding to when the the container was last modified.",
+  containerType: "The type of the container as specified upon creation or last update.",
+  relatedUserId: "If this event relates to another user, this field will be set to that user's GUID.  Currently only applies to 'accessed' actions.",
+}
+```
 
 ---
 
