@@ -36,7 +36,7 @@ We use AES256 [encryption](#encryption) with unique keys for each Absio Secured 
 
 ### Obfuscated File System
 * All Secured Containers and [Key Files](#key-file) can be securely in Absio's Obfuscated File System.  
-* This library automatically obfuscates the names and randomizes folder structure of the encrypted files.  
+* This module automatically obfuscates the names and randomizes folder structure of the encrypted files.  
 * Increases security by making attacks on the individually [encrypted](#encryption) containers more difficult.
 * The seed for obfuscation combines user, application, and server information to partition the data.
 
@@ -68,7 +68,7 @@ The `userId`, `password`, and `backupPassphrase` used below are the credentials 
    ``` javascript
    var securedContainer = require('absio-secured-container');
    ```
-3. Initialize the library and log in with an account:  
+3. Initialize the module and log in with an account:  
 
    ``` javascript
    securedContainer.initialize('your.absioApiServer.com', yourApiKey);
@@ -158,28 +158,35 @@ const latestUpdatedOfType = await securedContainer.getLastestEvents({
 
 #### Update
 
-The container [created above](#create) needs to be updated later with additional data containing sensitive information.  Also a new trusted system is given full access to this report.
+The container's content and header [created above](#create) needs to be updated later with additional sensitive information.  Also a new trusted system is given full access to this report.
 
 ``` javascript
-// Get the container securely
+// Get the container securely.
 const container = await securedContainer.get(containerId);
 
-// Do custom business logic to update the content and header.  This can be anything.
-container.content = updateSensitiveData(container.content, recordsToAdd);
-container.header.recordCount += recordsToAdd.length;
+// Make any needed update the content or header directly.
+updateContent(container.content);
+updateHeader(container.header);
 
-// Grant additional access with full permissions and no expiration
+// Can add access with full permissions and no expiration.
 container.access.push({
     userId: addedSystemId,
     permissions: {
         read: true,
         write: true,
-        modifyAccess: true
+        modifyAccess: true,
+        viewAccess: true
     }
 });
 
-// Update the container
+// Update the container.
 await securedContainer.update(container);
+```
+
+Update can also be used to redefine any field by referencing the container ID with any updated fields.  This shows redefining the type of a container with known ID.
+
+``` javascript
+await securedContainer.update(knownContainerId, { type: 'redefinedContainerType' });
 ```
 
 #### Delete
@@ -375,7 +382,7 @@ async function processUpdatedReports() {
 
 ### `initialize(serverUrl, apiKey[, options])`
 
-This method must be called first to initialize the library.
+This method must be called first to initialize the module.
 
 Parameter   | Type  | Description
 :------|:------|:-----------
