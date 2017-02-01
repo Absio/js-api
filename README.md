@@ -164,11 +164,11 @@ The container's content and header [created above](#create) needs to be updated 
 // Get the container securely.
 const container = await securedContainer.get(containerId);
 
-// Make any needed update the content or header directly.
+// Make any needed updates to the content or header directly.
 updateContent(container.content);
 updateHeader(container.header);
 
-// Can add access with full permissions and no expiration.
+// Add access with full permissions and no expiration.
 container.access.push({
     userId: addedSystemId,
     permissions: {
@@ -183,7 +183,7 @@ container.access.push({
 await securedContainer.update(container);
 ```
 
-Update can also be used to redefine any field by referencing the container ID with any updated fields.  This shows redefining the type of a container with known ID.
+Update can also be used to redefine any field by referencing the container ID with any fields to update.  This shows redefining the type of a container with known ID.
 
 ``` javascript
 await securedContainer.update(knownContainerId, { type: 'redefinedContainerType' });
