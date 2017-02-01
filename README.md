@@ -361,13 +361,13 @@ async function processUpdatedReports() {
 ## API
 * Container
   * [create(content[, options])](#createcontent-options---containerid)
-  * [deleteContainer(id[, options])](#deleteid-options)
+  * [deleteContainer(id)](#deleteid)
   * [get(id[, options])](#getid-options---container)
     * [container](#container)
   * [getLastestEvents([options])](#getlatesteventsoptions-----container--)
   * [getAccessNotifications(id)](#getaccessnotificationsid-----accessnotification--)
     * [accessNotification](#accessnotification)
-  * [update(container[, options])](#updatecontainer-options)
+  * [update(container)](#updatecontainer)
   * [update(id[, options])](#updateid-options)
 * General
   * [hash(seed) ](#hashseed---hashedstring)
@@ -393,7 +393,6 @@ Parameter   | Type  | Description
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
 `applicationName` | String | `''` | The API server uses the application name to identify different applications.
-`cacheLocal` | boolean | `true` | By default we cache information in a local database and Obfuscated File System.  This allows for offline access and greater efficiency.  Set to `false` to prevent this behavior.
 `obfuscatedFileSystemSeed` | String | `apiKey` | By default the specified `apiKey` and user information are used as the seed to the Obfuscated File System.  If would like greater granularity and separation of data, then provide a unique static string for the seed value.
 `rootDirectory` | String | `'./'` | By default the root directory of the Obfuscated File System will be the current directory.  The database and encrypted data is stored inside the Obfuscated File System.
 
@@ -439,9 +438,9 @@ Option | Type  | Default | Description
 
 ### `create(content[, options])` -> `'containerId'`
 
-Creates an encrypted container with the provided `content`. The container will be uploaded and access will be granted to the specified users, unless the `localAccessOnly` option is set to `true`.  
+Creates an encrypted container with the provided `content`. The container will be uploaded to the API server and access will be granted to the specified users.  
 
-The container will never expire for the owner.  The owner is automatically granted full permission to the container.
+The container will never expire for the owner.  The owner is automatically granted full permission to the container, unless a limited permission is defined in `access` for the owner.
 
 Returns a Promise that resolves to the new container's ID.
 
@@ -456,7 +455,6 @@ Option | Type  | Default | Description
 :------|:------|:--------|:-----------
 `access` | Array of user IDs (String) or [accessInformation](#accessInformation) for setting permissions and expiration | `[]` | Access will be granted to the users in this Array with any specified permissions or expiration.
 `header` | Object | `{}` | This will be serialized with `JSON.Stringify()`, independently encrypted, and can be retrieved prior to downloading and decrypting the full content. Use this to store any data related the content.
-`uploadToServer` | boolean | `true` | By default we upload the secured container to the server for backup and granting access.  Set to `false` to prevent server storage of encrypted containers.
 `type` | String | `null` | A string used to categorize the container on the server.
 
 #### accessInformation
@@ -475,9 +473,9 @@ Option | Type  | Default | Description
 
 ---
 
-### `update(container[, options])`
+### `update(container)`
 
-Updates the changed fields of the specified [container](#container). Both the local and server copies of the secured container will be updated, unless specified in the `uploadToServer` option.
+Updates the changed fields of the specified [container](#container). Both the local and server copies of the secured container will be updated.
 
 Returns a Promise.
 
@@ -485,11 +483,7 @@ Throws an Error if the connection is unavailable or an ID is not found.
 
 Parameter   | Type  | Description
 :-----------|:------|:-----------
-[`container`](#container) | Object | The container object that has been updated after being returned from `get()`.
-
-Option | Type  | Default | Description
-:------|:------|:--------|:-----------
-`uploadToServer` | boolean | `true` | By default we upload the secured container to the server for backup and granting access.  Set to `false` to prevent server storage of encrypted containers.
+[`container`](#container) | Object | An existing container object that has been updated after being returned from `get()`.
 
 ---
 
@@ -510,38 +504,32 @@ Option | Type  | Default | Description
 :------|:------|:--------|:-----------
 `access` | Array of user IDs (String) or [accessInformation](#accessInformation) for setting permissions and expiration | `null` | The access granted to the container on upload. If not specified the currently defined access will be left unchanged.
 `content` | [Buffer](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html) | null | The content to update.
-`header` | Object | `null` | This will be serialized with `JSON.Stringify()`, independently encrypted, and can be retrieved prior to downloading and decrypting the full content. Use this to store any data related the content.
-`uploadToServer` | boolean | `true` | By default we upload the secured container to the server for backup and granting access.  Set to `false` to prevent server storage of encrypted containers.
+`header` | Object | `null` | This will be serialized with `JSON.stringify()`, independently encrypted, and can be retrieved prior to downloading and decrypting the full content. Use this to store any data related the content.
 `type` | String | `null` | A string used to categorize the container on the server.
 
 ---
 
-### `deleteContainer(id[, options])`
+### `deleteContainer(id)`
 
 Deletes the container from the server and revokes access for all users, unless specified in options. Any data relating to this container will be deleted from the local Obfuscated File System.
 
 Returns a Promise.
 
-Throws an Error if the ID is not found or a connection is unavailable.  If the `localAccessOnly` option is set to `true`, then a connection is not needed.
+Throws an Error if the ID is not found or a connection is unavailable.
 
 Parameter   | Type  | Description
 :------|:------|:-----------
 `id` | String | The ID of the container to delete.
-`options` | Object [optional] | See table below.
-
-Option | Type  | Default | Description
-:------|:------|:--------|:-----------
-`localAccessOnly` | boolean | `false` | Prevents deleting container from the server. Only locally cached containers will be deleted.
 
 ---
 
 ### `get(id[, options])` -> [container](#container)
 
-Gets the secured container and decrypts it for usage. By default it downloads any required data, includes the content, and caches downloaded data locally.  Only encrypted data is cached locally and it is stored in an Obfuscated File System.  See the options for overriding this behavior.
+Gets the secured container and decrypts it for usage. By default it downloads the latest version of container, includes the content, and caches downloaded data locally.  Only encrypted data is cached locally and stored in an Obfuscated File System.  See the options for overriding this behavior.
 
 Returns a Promise that resolves to a [container](#container)
 
-Throws an Error if the container or connection is unavailable.  If the `localAccessOnly` option is set to `true`, then a connection is not needed.
+Throws an Error if the container or connection is unavailable.
 
 Parameter   | Type  | Description
 :------|:------|:-----------
@@ -552,7 +540,6 @@ Option | Type  | Default | Description
 :------|:------|:--------|:-----------
 `cacheLocal` | boolean | `true` | By default we cache information in a local database and Obfuscated File System.  This allows for offline access and greater efficiency.  Set to `false` to prevent this behavior.
 `includeContent` | boolean | `true` | Set to `false` to prevent downloading and decrypting content.  This is helpful when the content is very large.
-`localAccessOnly` | boolean | `false` | Prevents downloading container from the server. Only containers cached locally in the Obfuscated File System will be available.
 
 #### container
 ``` javascript
