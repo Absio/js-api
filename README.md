@@ -24,7 +24,8 @@ We use AES256 [encryption](#encryption) with unique keys for each Absio Secured 
 * A user is an entity that has its own set of private keys.  
 * Create users with the [`register()`](#registerpassword-question-backuppassphrase---userid) function.
 * A user's public keys are registered with an Absio Server under a static User ID.
-  * Public keys are used by the server to validate user actions and are published to other users for granting access to containers.
+  * Public keys are publicly available to other users for granting access to containers.
+  * Public keys are used by the server to validate user actions.
 * Each user can [create](#createcontent-options---containerid) Secured Containers that are uniquely [encrypted](#encryption).
 * Optionally a user can grant [access](#accessinformation) to a container for sharing with unique permissions or expiration to another set of users.
 
