@@ -360,13 +360,12 @@ async function processUpdatedReports() {
 
 ## API
 * Container
+  * [container Object](#container)
+  * [containerEvent Object](#containerevent)
   * [create(content[, options])](#createcontent-options---containerid)
   * [deleteContainer(id)](#deleteid)
   * [get(id[, options])](#getid-options---container)
-    * [container](#container)
-  * [getLastestEvents([options])](#getlatesteventsoptions-----container--)
-  * [getAccessNotifications(id)](#getaccessnotificationsid-----accessnotification--)
-    * [accessNotification](#accessnotification)
+  * [getLastestEvents([options])](#getlatesteventsoptions-----containerevent--)
   * [update(container)](#updatecontainer)
   * [update(id[, options])](#updateid-options)
 * General
@@ -604,28 +603,6 @@ Option | Type  | Default | Description
   lastModified: "ISO formatted date string corresponding to when the the container was last modified.",
   containerType: "The type of the container as specified upon creation or last update.",
   relatedUserId: "If this event relates to another user, this field will be set to that user's GUID.  Currently only applies to 'accessed' actions.",
-}
-```
-
----
-
-### `getAccessNotifications(id)` -> [`[ { accessNotification } ]`](#accessnotification)
-
-Gets the dates that users first accessed the secured container on the server.
-
-Returns a promise that resolves to an Array of [accessNotification](#accessnotification).
-
-Throws an Error if the ID is not found or a connection is unavailable.
-
-Parameter   | Type  | Description
-:------|:------|:-----------
-`id` | String | The ID of the container.
-
-#### accessNotification
-``` javascript
-{
-    userId: 'userIdThatAccessed'
-    firstAccessed: Date() // Date first accessed by corresponding userId
 }
 ```
 
