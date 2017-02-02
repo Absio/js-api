@@ -363,9 +363,9 @@ async function processUpdatedReports() {
   * [container Object](#container)
   * [containerEvent Object](#containerevent)
   * [create(content[, options])](#createcontent-options---containerid)
-  * [deleteContainer(id)](#deleteid)
+  * [deleteContainer(id)](#deletecontainerid)
   * [get(id[, options])](#getid-options---container)
-  * [getLastestEvents([options])](#getlatesteventsoptions-----containerevent--)
+  * [getLastestEvents([options])](#getlastesteventsoptions-----containerevent--)
   * [update(container)](#updatecontainer)
   * [update(id[, options])](#updateid-options)
 * General
@@ -376,7 +376,7 @@ async function processUpdatedReports() {
   * [changePassword(currentPassphrase, currentPassword, newPassword)](#changepasswordcurrentpassphrase-currentpassword-newpassword)
   * [getBackupReminder(userId)](#getbackupreminderuserid---reminder-for-the-backup-passphrase)
   * [logIn(userId, password, backupPassphrase[, options])](#loginuserid-password-backuppassphrase-options)
-  * [register(password, question, backupPassphrase)](#registerpassword-question-backuppassphrase---userid)
+  * [register(password, question, backupPassphrase)](#registerpassword-reminder-backuppassphrase---userid)
   * [resetPassword(userId, backupPassphrase, newPassword)](#resetpassworduserid-backuppassphrase-newpassword)
 
 ### `initialize(serverUrl, apiKey[, options])`
