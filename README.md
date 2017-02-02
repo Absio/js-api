@@ -586,9 +586,10 @@ Parameter   | Type  | Description
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
-`startingEventId` | Number | `-1` | 0 will start from the beginning and download all containers for the current user.  Use the `storageInformation.latestEventId` field of the [container](#container) to start from existing successful event. -1 will download all new since last call.
-`containerType` | String | `null` | Only containers of the specified type will be downloaded. Type is a string used to categorize containers on the server.
+`containerType` | String | `null` | Only events of the specified container type will be returned. Type is a string used to categorize containers on the server.
+`containerId` | String | `null` | Filter the results to only include events related to the specified container ID.
 `eventAction` | String | `'all'` | All container actions are included in the results by default. Possible values are: `'all'`, `'accessed'`, `'added'`, `'deleted'`, or `'updated'`
+`startingEventId` | Number | `-1` | 0 will start from the beginning and download all events for the current user with the specified criteria.  Use the `eventId` field of the [containerEvent](#containerevent) to start from a known event. -1 will download all new since last call.
 
 #### containerEvent
 
