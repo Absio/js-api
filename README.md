@@ -10,13 +10,13 @@ Protect your application's sensitive data with Absio's Secured Containers.
 * [API](#api)
 
 ## Overview
-We use AES256 [encryption](#encryption) with unique keys for each Absio Secured Container to protect your application's data.  For offline access and efficiency the Secured Containers are stored in Absio's [Obfuscated File System](#obfuscated-file-system).
+We use AES256 [encryption](#encryption) with unique keys for each Absio Secured Container to protect your application's data.  For offline access and efficiency the Absio Secured Containers are stored in Absio's [Obfuscated File System](#obfuscated-file-system).
 
 ### Asynchronous
-* All Secured Container functions return a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) and execute asynchronously, except for [`initialize()`](#initializeserverurl-apikey-options).
+* All Absio Secured Container functions return a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) and execute asynchronously, except for [`initialize()`](#initializeserverurl-apikey-options).
   * Use the existing [`.then()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then) and [`.catch()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch) methods to handle the promises.
-  * Execute multiple asynchronous Secured Container methods in parallel using [`Promise.all()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all) or [`Promise.race()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/race).
-* If this prevents you from using Absio Secured Container in your application, then please contact us.
+  * Execute multiple asynchronous Absio Secured Container methods in parallel using [`Promise.all()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all) or [`Promise.race()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/race).
+* If this prevents you from using Absio Secured Containers in your application, then please contact us.
 * Optionally use the async-await syntax enabled by [Babel](https://babeljs.io/) as shown in the [Usage](#usage) section.
 * For greater browser support we suggest using the [ES6 Promise](https://github.com/stefanpenner/es6-promise) polyfill.
 
@@ -26,8 +26,8 @@ We use AES256 [encryption](#encryption) with unique keys for each Absio Secured 
 * A user's public keys are registered with an Absio Server under a static User ID.
   * Public keys are publicly available to other users for granting access to containers.
   * Public keys are used by the server to validate user actions.
-* Each user can [create](#createcontent-options---containerid) Secured Containers that are uniquely [encrypted](#encryption).
-* Optionally a user can grant [access](#accessinformation) to a container for sharing with unique permissions or expiration to another set of users.
+* Each user can [create](#createcontent-options---containerid) Absio Secured Containers that are uniquely [encrypted](#encryption).
+* Optionally a user can grant other users [access](#accessinformation) to an Absio Secured Container and add unique permissions or lifespan controls.
 
 ### Key File
 * A [user's](#users) Key File is an AES256 [encrypted](#encryption) file containing private keys and password reset.  
@@ -35,19 +35,19 @@ We use AES256 [encryption](#encryption) with unique keys for each Absio Secured 
 * A backup passphrase can be provided to synchronize a Key File between devices and enable a secure password reset.
 
 ### Obfuscated File System
-* All Secured Containers and [Key Files](#key-file) can be securely in Absio's Obfuscated File System.  
-* This module automatically obfuscates the names and randomizes folder structure of the encrypted files.  
+* All Absio Secured Containers and [Key Files](#key-file) can be securely stored in Absio's Obfuscated File System.  
+* This module automatically obfuscates the names and randomizes the folder structure of the encrypted files.  
 * Increases security by making attacks on the individually [encrypted](#encryption) containers more difficult.
 * The seed for obfuscation combines user, application, and server information to partition the data.
 
 ### Encryption
-* A user's private keys are stored in [Key File](#key-file) encrypted with AES256 using a key derived from the user's password.
+* A user's private keys are stored in a [Key File](#key-file) encrypted with AES256 using a key derived from the user's password.
   * A [Key File](#key-file) contains both signing and derivation private keys.
   * The encryption key is derived using the Password Based Key Derivation Function 2 (PBKDF2).
 * Every Absio Secured Container has a unique set of secret keys.
   * Secret Keys are stored encrypted and used to securely access the container.
   * HMAC-SHA256 keys are used for content validation to mitigate content tampering.
-  * AES256 keys are used to individually encrypt the header and content of the Secured Container.
+  * AES256 keys are used to individually encrypt the header and content of the Absio Secured Container.
 * The secret keys for an Absio Secured Container are uniquely encrypted for each user that can access the container.
   * This encryption of the secret keys uses Static-ephemeral Diffie-Hellman Key Exchange (DHKE) based upon a user's public derivation key.
   * This process encrypts the secret keys such that they can only be decrypted with the user's corresponding private derivation key.
@@ -74,7 +74,7 @@ The `userId`, `password`, and `backupPassphrase` used below are the credentials 
    securedContainer.initialize('your.absioApiServer.com', yourApiKey);
    await securedContainer.logIn(alicesId, alicesPassword, alicesBackupPassphrase);
    ```
-4. Start creating secured containers:
+4. Start creating Absio Secured Containers:
 
    ``` javascript
    const sensitiveData = new Buffer('Sensitive Data...000-00-0000...');
@@ -87,7 +87,7 @@ The `userId`, `password`, and `backupPassphrase` used below are the credentials 
    const containerId = await securedContainer.create(sensitiveData, { access: containerAccess });
    ```
 
-5. Securely access these containers from another system:
+5. Securely access these Absio Secured Containers from another system:
 
    ``` javascript
    await securedContainer.logIn(bobsId, bobsPassword, bobsBackupPassphrase);
@@ -98,7 +98,7 @@ The `userId`, `password`, and `backupPassphrase` used below are the credentials 
    ```
 
 ## Usage
-The following usage examples requires that the general setup in [Getting Started](#getting-started) has been completed.
+The following usage examples require that the general setup in [Getting Started](#getting-started) has been completed.
 
 #### Create
 This is an example of creating a container that contains sensitive data.
@@ -197,6 +197,166 @@ The container with secret data [created above](#create) should no longer be acce
 await securedContainer.deleteContainer(containerId);
 ```
 
+### Possible 418 Intelligence Usage
+Below are three examples specific to our understanding of the simplest usage in the 418 use cases.  Some of the Promises could be executed in parallel for maximum efficiency, but to simplify the examples this is not included below.
+
+#### Customer System
+
+Encrypt unstructured data and share with the Trusted Data Broker.
+
+``` javascript
+async function shareUnstructuredData(unstructuredData) {
+    const containerOptions = {
+        access: [trustedDataBrokerId],
+        type: 'unstructured-data'
+    };
+
+    await securedContainer.create(unstructuredData, containerOptions);
+}
+```
+
+Get report container events and corresponding secured containers. Then update the reports based upon validity.
+
+``` javascript
+
+async function updateReportsForValidity() {
+    const reportContainerEvents = await securedContainer.getLastestEvents({ containerType: 'report' });
+
+    for (let reportEvent of reportContainerEvents) {
+        const reportContainer = await securedContainer.get(reportEvent.containerId);
+
+        reportContainer.content = processReportForValidity(reportContainer.content);
+        await securedContainer.update(reportContainer);
+    }
+}
+
+```
+
+#### Trusted Data Broker
+
+Get unstructured data and convert into NetFlow format and obfuscated data map.  Encrypt and Share the NetFlow data with the [Analysis System](#analysis-system) and the obfuscated data map with the [Customer System](#customer-system).
+
+``` javascript
+async function processUnstructuredData() {
+    const unstructuredDataEvents = await securedContainer.getLastestEvents({ containerType: 'unstructured-data' });
+
+    for (let containerEvent of unstructuredDataEvents) {
+        const container = securedContainer.get(containerEvent.containerId);
+        const results = createNetFlowDataWithDataMap(container.content);
+
+        await shareNetFlowData(results.netFlowFormat);
+        await shareObfuscatedDataMap(results.obfuscatedDataMap);
+    }
+}
+
+async function shareNetFlowData(netFlowData) {
+    const containerOptions = {
+        access: [analysisSystemId],
+        containerType: 'net-flow-data'
+    };
+
+    await securedContainer.create(netFlowData, containerOptions);
+}
+
+async function shareObfuscatedDataMap(obfuscatedDataMap) {
+    const containerOptions = {
+        access: [customerSystemId],
+        type: 'obfuscated-data-map'
+    };
+
+    await securedContainer.create(obfuscatedDataMap, containerOptions);
+}
+```
+
+Get added report container events and redefine the access and corresponding permissions. The redefined permissions ensure that the [Customer System](#customer-system) and [Analysis System](#analysis-system) cannot know about each other, while still maintaining read and write access to the report.
+
+``` javascript
+const limitedPermissions = {
+    read: true,
+    write: true,
+    modifyAccess: false,
+    viewAccess: false
+}
+
+const redefinedAccess = [
+    {
+        userId: analysisSystemId,
+        permissions: {
+            read: true,
+            write: true,
+            modifyAccess: true,
+            viewAccess: true
+        }    
+    },
+    {
+        userId: customerSystemId,
+        permissions: limitedPermissions
+    },
+    {
+        userId: analysisSystemId,
+        permissions: limitedPermissions
+    }
+]
+
+async function redefineReportAccess() {
+    const reportContainerEvents = await securedContainer.getLatestEvents({
+        eventAction: 'added'
+        containerType: 'report',
+    });
+
+    for (let reportEvent of reportContainerEvents) {
+        await securedContainer.update(reportEvent.containerId, {
+            access: redefinedAccess
+        });
+    }
+}
+```
+
+#### Analysis System
+
+Get the containers with NetFlow formatted data.  After performing analysis on the data, create a Secured Container that the [Trusted Data Broker](#trusted-data-broker) can access with full permissions.
+
+``` javascript
+async function processNetFlowData() {
+    const netFlowContainerEvents = await securedContainer.getLastestEvents({ containerType: 'net-flow-data' });
+
+    const reportContainerAccess = [{
+        userId: trustedDataBrokerId,
+        permissions: {
+            read: true,
+            write: true,
+            modifyAccess: true,
+            viewAccess: true
+        }
+    }];
+
+    for (let containerEvent of netFlowContainerEvents) {
+        const container = await securedContainer.get(containerEvent.containerId);
+        const report = performAnalysis(container.content);
+
+        await securedContainer.create(report, {
+            access: reportContainerAccess,
+            containerType: 'report'
+        });
+    }
+}
+```
+
+Get containers with reports updated by the [Customer System](#customer-system).  Use updated report to adjust the algorithms of the Analysis System.
+
+``` javascript
+async function processUpdatedReports() {
+    const updatedReportEvents = await securedContainer.getLastestEvents({
+        containerType: 'report'
+        eventAction: 'updated'
+    });
+
+    for (let reportEvent of updatedReportEvents) {
+        const reportContainer = await securedContainer.get(reportEvent.containerId);
+        updateSystemForReport(reportContainer.content);
+    }
+}
+```
 
 ## API
 * Container
@@ -232,7 +392,7 @@ Parameter   | Type  | Description
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
 `applicationName` | String | `''` | The API server uses the application name to identify different applications.
-`obfuscatedFileSystemSeed` | String | `apiKey` | By default the specified `apiKey` and user information are used as the seed to the Obfuscated File System.  If would like greater granularity and separation of data, then provide a unique static string for the seed value.
+`obfuscatedFileSystemSeed` | String | `apiKey` | By default the specified `apiKey` and user information are used as the seed to the Obfuscated File System.  If you would like greater granularity and separation of data, then provide a unique static string for the seed value.
 `rootDirectory` | String | `'./'` | By default the root directory of the Obfuscated File System will be the current directory.  The database and encrypted data is stored inside the Obfuscated File System.
 
 ---
@@ -271,7 +431,7 @@ Parameter   | Type  | Description
 
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
-`cacheFileLocal` | boolean | `true` | By default we cache the encrypted key file in the local Obfuscated File System for offline and greater efficiency.  Set to `false` to prevent this from being cached.
+`cacheFileLocal` | boolean | `true` | By default we cache the encrypted key file in the local Obfuscated File System for offline access and greater efficiency.  Set to `false` to prevent this from being cached.
 
 ---
 
@@ -293,7 +453,7 @@ Parameter   | Type  | Description
 Option | Type  | Default | Description
 :------|:------|:--------|:-----------
 `access` | Array of user IDs (String) or [accessInformation](#accessInformation) for setting permissions and expiration | `[]` | Access will be granted to the users in this Array with any specified permissions or expiration.
-`header` | Object | `{}` | This will be serialized with `JSON.Stringify()`, independently encrypted, and can be retrieved prior to downloading and decrypting the full content. Use this to store any data related the content.
+`header` | Object | `{}` | This will be serialized with `JSON.Stringify()`, independently encrypted, and can be retrieved prior to downloading and decrypting the full content. Use this to store any data related to the content.
 `type` | String | `null` | A string used to categorize the container on the server.
 
 #### accessInformation
@@ -314,7 +474,7 @@ Option | Type  | Default | Description
 
 ### `update(container)`
 
-Updates the changed fields of the specified [container](#container). Both the local and server copies of the secured container will be updated.
+Updates the changed fields of the specified [container](#container). Both the local and server copies of the Absio Secured Container will be updated.
 
 Returns a Promise.
 
@@ -328,7 +488,7 @@ Parameter   | Type  | Description
 
 ### `update(id[, options])`
 
-Updates the container with the specified ID. At least one optional parameters must be provided for an update to occur.
+Updates the container with the specified ID. At least one optional parameter must be provided for an update to occur.
 
 Returns a Promise.
 
@@ -343,7 +503,7 @@ Option | Type  | Default | Description
 :------|:------|:--------|:-----------
 `access` | Array of user IDs (String) or [accessInformation](#accessInformation) for setting permissions and expiration | `null` | The access granted to the container on upload. If not specified the currently defined access will be left unchanged.
 `content` | [Buffer](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html) | null | The content to update.
-`header` | Object | `null` | This will be serialized with `JSON.stringify()`, independently encrypted, and can be retrieved prior to downloading and decrypting the full content. Use this to store any data related the content.
+`header` | Object | `null` | This will be serialized with `JSON.stringify()`, independently encrypted, and can be retrieved prior to downloading and decrypting the full content. Use this to store any data related to the content.
 `type` | String | `null` | A string used to categorize the container on the server.
 
 ---
@@ -364,7 +524,7 @@ Parameter   | Type  | Description
 
 ### `get(id[, options])` -> [container](#container)
 
-Gets the secured container and decrypts it for usage. By default it downloads the latest version of container, includes the content, and caches downloaded data locally.  Only encrypted data is cached locally and stored in an Obfuscated File System.  See the options for overriding this behavior.
+Gets the Absio Secured Container and decrypts it for usage. By default it downloads the latest version of container, includes the content, and caches downloaded data locally.  Only encrypted data is cached locally and stored in an Obfuscated File System.  See the options for overriding this behavior.
 
 Returns a Promise that resolves to a [container](#container)
 
