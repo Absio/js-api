@@ -199,19 +199,19 @@ await securedContainer.deleteContainer(containerId);
 ```
 
 ## API
-* Container
-  * [container Object](#container)
-  * [containerEvent Object](#containerevent)
+* [Container](#container)
+  * [Container Object](#container-object)
+  * [Container Event Object](#container-event-object)
   * [create(content[, options])](#createcontent-options---containerid)
   * [deleteContainer(id)](#deletecontainerid)
   * [get(id[, options])](#getid-options---container)
-  * [getLastestEvents([options])](#getlastesteventsoptions-----containerevent--)
+  * [getLastestEvents([options])](#getlastesteventsoptions-----container-event--)
   * [update(container)](#updatecontainer)
   * [update(id[, options])](#updateid-options)
-* General
+* [General](#general)
   * [hash(seed) ](#hashseed---hashedstring)
   * [initialize(serverUrl, apiKey[, options])](#initializeserverurl-apikey-options)
-* User Accounts
+* [User Accounts](#user-accounts)
   * [changeBackupCredentials(currentPassphrase, currentPassword, newReminder, newPassphrase)](#changebackupcredentialscurrentpassphrase-currentpassword-newreminder-newpassphrase)
   * [changePassword(currentPassphrase, currentPassword, newPassword)](#changepasswordcurrentpassphrase-currentpassword-newpassword)
   * [getBackupReminder(userId)](#getbackupreminderuserid---reminder-for-the-backup-passphrase)
@@ -219,168 +219,9 @@ await securedContainer.deleteContainer(containerId);
   * [register(password, question, backupPassphrase)](#registerpassword-reminder-backuppassphrase---userid)
   * [resetPassword(userId, backupPassphrase, newPassword)](#resetpassworduserid-backuppassphrase-newpassword)
 
-### `initialize(serverUrl, apiKey[, options])`
+### Container
 
-This method must be called first to initialize the module.
-
-Parameter   | Type  | Description
-:------|:------|:-----------
-`serverUrl` | String | The URL of the API server.
-`apiKey` | String | The API Key is required for using the API server.  Contact Absio to obtain an API Key.
-`options` | Object [optional] | See table below.
-
-Option | Type  | Default | Description
-:------|:------|:--------|:-----------
-`applicationName` | String | `''` | The API server uses the application name to identify different applications.
-`obfuscatedFileSystemSeed` | String | `apiKey` | By default the specified `apiKey` and user information are used as the seed to the Obfuscated File System.  If you would like greater granularity and separation of data, then provide a unique static string for the seed value.
-`rootDirectory` | String | `'./'` | By default the root directory of the Obfuscated File System will be the current directory.  The database and encrypted data is stored inside the Obfuscated File System.
-
----
-
-### `register(password, reminder, backupPassphrase)` -> `'userId'`
-
-**Important:** The `password` and `backupPassphrase` should be kept secret.  We recommend using long and complex values with numbers and/or symbols.  Do not store them publicly in plain text.
-
-Generates private keys and registers a new user on the API server.  This user's private keys are encrypted with the `password` to produce a key file.  The `backupPassphrase` is used to reset the password and download the key file. Our web-based user creation utility can also be used to securely generate static users.
-
-Returns a Promise that resolves to the new user's ID.
-
-Throws an Error if the connection is unavailable.
-
-Parameter   | Type  | Description
-:-----------|:------|:-----------
-`password` | String | The password used to encrypt the key file.
-`reminder` | String | The reminder should only be used as a hint to remember the `backupPassphrase`. This string is stored in plain text and should not contain sensitive information.
-`backupPassphrase` | String | The `backupPassphrase` can be used later to reset the password or to allow logging in from another system.
-
----
-
-### `logIn(userId, password, backupPassphrase[, options])`
-
-Decrypts the key file containing the user's private keys with the provided password.  If the decryption succeeds, then a private key will be used to authenticate with the server.  If the key file is not cached locally, the `backupPassphrase` is used to download the key file.
-
-Returns a Promise.
-
-Throws an Error if the `password` or `backupPassphrase` are incorrect, the `userId` is not found, or a connection is unavailable. In the last case the server authentication will be attempted again automatically when any method is called requiring a connection.
-
-Parameter   | Type  | Description
-:-----------|:------|:-----------
-`userId` | String | The userId value is returned at registration.  Call `register()` or use our [user creation interface](TODO place url here).
-`password` | String | The password used to decrypt the key file.
-`backupPassphrase` | String | The `backupPassphrase` is used retrieve the key file from the server.
-
-Option | Type  | Default | Description
-:------|:------|:--------|:-----------
-`cacheFileLocal` | boolean | `true` | By default we cache the encrypted key file in the local Obfuscated File System for offline access and greater efficiency.  Set to `false` to prevent this from being cached.
-
----
-
-### `create(content[, options])` -> `'containerId'`
-
-Creates an encrypted container with the provided `content`. The container will be uploaded to the API server and access will be granted to the specified users.  
-
-The container will never expire for the owner.  The owner is automatically granted full permission to the container, unless a limited permission is defined in `access` for the owner.
-
-Returns a Promise that resolves to the new container's ID.
-
-Throws an Error if the connection is unavailable or an access userId is not found.
-
-Parameter   | Type  | Description
-:-----------|:------|:-----------
-`content` | [Buffer](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html) | Node.js [Buffer](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html) for the data to be stored in the container.
-`options` | Object [optional] | See table below.
-
-Option | Type  | Default | Description
-:------|:------|:--------|:-----------
-`access` | Array of user IDs (String) or [accessInformation](#accessInformation) for setting permissions and expiration | `[]` | Access will be granted to the users in this Array with any specified permissions or expiration.
-`header` | Object | `{}` | This will be serialized with `JSON.Stringify()`, independently encrypted, and can be retrieved prior to downloading and decrypting the full content. Use this to store any data related to the content.
-`type` | String | `null` | A string used to categorize the container on the server.
-
-#### accessInformation
-```javascript
-{
-    expiration: <null or Date()>,
-    permissions: { // These are default permissions, if none are specified.
-        read: true,
-        write: false,
-        modifyAccess: false,
-        viewAccess: true
-    },
-    userId: 'userIdGrantedAccess'
-}
-```
-
----
-
-### `update(container)`
-
-Updates the changed fields of the specified [container](#container). Both the local and server copies of the Absio Secured Container will be updated.
-
-Returns a Promise.
-
-Throws an Error if the connection is unavailable or an ID is not found.
-
-Parameter   | Type  | Description
-:-----------|:------|:-----------
-[`container`](#container) | Object | An existing container object that has been updated after being returned from `get()`.
-
----
-
-### `update(id[, options])`
-
-Updates the container with the specified ID. At least one optional parameter must be provided for an update to occur.
-
-Returns a Promise.
-
-Throws an Error if the connection is unavailable or an ID is not found.
-
-Parameter   | Type  | Description
-:------|:------|:-----------
-`id` | String | The ID of the container to update
-`options` | Object [optional] | See table below.
-
-Option | Type  | Default | Description
-:------|:------|:--------|:-----------
-`access` | Array of user IDs (String) or [accessInformation](#accessInformation) for setting permissions and expiration | `null` | The access granted to the container on upload. If not specified the currently defined access will be left unchanged.
-`content` | [Buffer](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html) | null | The content to update.
-`header` | Object | `null` | This will be serialized with `JSON.stringify()`, independently encrypted, and can be retrieved prior to downloading and decrypting the full content. Use this to store any data related to the content.
-`type` | String | `null` | A string used to categorize the container on the server.
-
----
-
-### `deleteContainer(id)`
-
-Deletes the container from the server and revokes access for all users, unless specified in options. Any data relating to this container will be deleted from the local Obfuscated File System.
-
-Returns a Promise.
-
-Throws an Error if the ID is not found or a connection is unavailable.
-
-Parameter   | Type  | Description
-:------|:------|:-----------
-`id` | String | The ID of the container to delete.
-
----
-
-### `get(id[, options])` -> [container](#container)
-
-Gets the Absio Secured Container and decrypts it for usage. By default it downloads the latest version of container, includes the content, and caches downloaded data locally.  Only encrypted data is cached locally and stored in an Obfuscated File System.  See the options for overriding this behavior.
-
-Returns a Promise that resolves to a [container](#container)
-
-Throws an Error if the container or connection is unavailable.
-
-Parameter   | Type  | Description
-:------|:------|:-----------
-`id` | String | The ID of the container to update
-`options` | Object [optional] | See table below.
-
-Option | Type  | Default | Description
-:------|:------|:--------|:-----------
-`cacheLocal` | boolean | `true` | By default we cache information in a local database and Obfuscated File System.  This allows for offline access and greater efficiency.  Set to `false` to prevent this behavior.
-`includeContent` | boolean | `true` | Set to `false` to prevent downloading and decrypting content.  This is helpful when the content is very large.
-
-#### container
+### Container Object
 ``` javascript
 {
     access: [
@@ -412,26 +253,7 @@ Option | Type  | Default | Description
 
 ---
 
-### `getLastestEvents([options])` -> [`[ { containerEvent } ]`](#containerevent)
-
-Gets all new container events since the last call of this method, unless specified with `startingEventId` in `options`. Options can be used to change the criteria for the container events returned by this method.
-
-Returns a Promise that resolves to an Array of [container events](#containerevent).
-
-Throws an Error if the connection is unavailable.
-
-Parameter   | Type  | Description
-:------|:------|:-----------
-`options` | Object [optional] | See table below.
-
-Option | Type  | Default | Description
-:------|:------|:--------|:-----------
-`containerType` | String | `null` | Only events of the specified container type will be returned. Type is a string used to categorize containers on the server.
-`containerId` | String | `null` | Filter the results to only include events related to the specified container ID.
-`eventAction` | String | `'all'` | All container actions are included in the results by default. Possible values are: `'all'`, `'accessed'`, `'added'`, `'deleted'`, or `'updated'`
-`startingEventId` | Number | `-1` | 0 will start from the beginning and download all events for the current user with the specified criteria.  Use the `eventId` field of the [containerEvent](#containerevent) to start from a known event. -1 will download all new since last call.
-
-#### containerEvent
+### Container Event Object
 
 ``` javascript
 {
@@ -449,31 +271,180 @@ Option | Type  | Default | Description
 
 ---
 
-### `getBackupReminder(userId)` -> `'Reminder for the backup passphrase'`
-Gets the publicly accessible reminder for the user's backup passphrase.  If no ID is provided, the user ID for the currently logged in user will be used.
+### `create(content[, options])` -> `'containerId'`
 
-Returns a Promise that resolves to the user's reminder.
+Creates an encrypted container with the provided `content`. The container will be uploaded to the API server and access will be granted to the specified users.  
 
-Throws an exception if the connection is unavailable.
+The container will never expire for the owner.  The owner is automatically granted full permission to the container, unless a limited permission is defined in `access` for the owner.
+
+Returns a Promise that resolves to the new container's ID.
+
+Throws an Error if the connection is unavailable or an access userId is not found.
 
 Parameter   | Type  | Description
 :-----------|:------|:-----------
-`userId` | String | A string ID representing the user.
+`content` | [Buffer](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html) | Node.js [Buffer](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html) for the data to be stored in the container.
+`options` | Object [optional] | See table below.
+
+Option | Type  | Default | Description
+:------|:------|:--------|:-----------
+`access` | Array of user IDs (String) or [Access Information](#access-information-object) for setting permissions and expiration | `[]` | Access will be granted to the users in this Array with any specified permissions or expiration.
+`header` | Object | `{}` | This will be serialized with `JSON.Stringify()`, independently encrypted, and can be retrieved prior to downloading and decrypting the full content. Use this to store any data related to the content.
+`type` | String | `null` | A string used to categorize the container on the server.
+
+### Access Information Object
+```javascript
+{
+    expiration: <null or Date()>,
+    permissions: { // These are default permissions, if none are specified.
+        read: true,
+        write: false,
+        modifyAccess: false,
+        viewAccess: true
+    },
+    userId: 'userIdGrantedAccess'
+}
+```
 
 ---
 
-### `resetPassword(userId, backupPassphrase, newPassword)`
-If user's password is forgotten, then use this to reset a user's password. Call `getBackupReminder(userId)` to get the reminder for the `backupPassphrase`.
+### `deleteContainer(id)`
+
+Deletes the container from the server and revokes access for all users, unless specified in options. Any data relating to this container will be deleted from the local Obfuscated File System.
 
 Returns a Promise.
 
-Throws an Error if the `backupPassphrase` is incorrect or user ID is not found.  If the Key File is not cached locally, then an Error will be thrown if the connection is unavailable.
+Throws an Error if the ID is not found or a connection is unavailable.
+
+Parameter   | Type  | Description
+:------|:------|:-----------
+`id` | String | The ID of the container to delete.
+
+---
+
+### `get(id[, options])` -> [container](#container-object)
+
+Gets the Absio Secured Container and decrypts it for usage. By default it downloads the latest version of container, includes the content, and caches downloaded data locally.  Only encrypted data is cached locally and stored in an Obfuscated File System.  See the options for overriding this behavior.
+
+Returns a Promise that resolves to a [container](#container-object)
+
+Throws an Error if the container or connection is unavailable.
+
+Parameter   | Type  | Description
+:------|:------|:-----------
+`id` | String | The ID of the container to update
+`options` | Object [optional] | See table below.
+
+Option | Type  | Default | Description
+:------|:------|:--------|:-----------
+`cacheLocal` | boolean | `true` | By default we cache information in a local database and Obfuscated File System.  This allows for offline access and greater efficiency.  Set to `false` to prevent this behavior.
+`includeContent` | boolean | `true` | Set to `false` to prevent downloading and decrypting content.  This is helpful when the content is very large.
+
+---
+
+### `getLastestEvents([options])` -> [`[ { Container Event } ]`](#container-event-object)
+
+Gets all new container events since the last call of this method, unless specified with `startingEventId` in `options`. Options can be used to change the criteria for the container events returned by this method.
+
+Returns a Promise that resolves to an Array of [container events](#container-event-object).
+
+Throws an Error if the connection is unavailable.
+
+Parameter   | Type  | Description
+:------|:------|:-----------
+`options` | Object [optional] | See table below.
+
+Option | Type  | Default | Description
+:------|:------|:--------|:-----------
+`containerType` | String | `null` | Only events of the specified container type will be returned. Type is a string used to categorize containers on the server.
+`containerId` | String | `null` | Filter the results to only include events related to the specified container ID.
+`eventAction` | String | `'all'` | All container actions are included in the results by default. Possible values are: `'all'`, `'accessed'`, `'added'`, `'deleted'`, or `'updated'`
+`startingEventId` | Number | `-1` | 0 will start from the beginning and download all events for the current user with the specified criteria.  Use the `eventId` field of the [Container Event](#container-event-object) to start from a known event. -1 will download all new since last call.
+
+---
+
+### `update(container)`
+
+Updates the changed fields of the specified [container](#container-object). Both the local and server copies of the Absio Secured Container will be updated.
+
+Returns a Promise.
+
+Throws an Error if the connection is unavailable or an ID is not found.
 
 Parameter   | Type  | Description
 :-----------|:------|:-----------
-`userId` | String | A string ID representing the user.
-`backupPassphrase` | String | The `backupPassphrase` is set up during registration of the account.  This is used to reset the password.
-`newPassword` | String | The new password for the user.
+[`container`](#container-object) | Object | An existing container object that has been updated after being returned from `get()`.
+
+---
+
+### `update(id[, options])`
+
+Updates the container with the specified ID. At least one optional parameter must be provided for an update to occur.
+
+Returns a Promise.
+
+Throws an Error if the connection is unavailable or an ID is not found.
+
+Parameter   | Type  | Description
+:------|:------|:-----------
+`id` | String | The ID of the container to update
+`options` | Object [optional] | See table below.
+
+Option | Type  | Default | Description
+:------|:------|:--------|:-----------
+`access` | Array of user IDs (String) or [accessInformation](#access-information-object) for setting permissions and expiration | `null` | The access granted to the container on upload. If not specified the currently defined access will be left unchanged.
+`content` | [Buffer](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html) | null | The content to update.
+`header` | Object | `null` | This will be serialized with `JSON.stringify()`, independently encrypted, and can be retrieved prior to downloading and decrypting the full content. Use this to store any data related to the content.
+`type` | String | `null` | A string used to categorize the container on the server.
+
+---
+
+## General
+
+### `hash(seed)` -> `'hashedString'`
+Produces a sha256 hash of the specified seed.
+
+Returns a string with the hashed value.
+
+Parameter   | Type  | Description
+:------|:------|:-----------
+`seed` | String | Seed for producing the hash
+
+---
+
+### `initialize(serverUrl, apiKey[, options])`
+
+This method must be called first to initialize the module.
+
+Parameter   | Type  | Description
+:------|:------|:-----------
+`serverUrl` | String | The URL of the API server.
+`apiKey` | String | The API Key is required for using the API server.  Contact Absio to obtain an API Key.
+`options` | Object [optional] | See table below.
+
+Option | Type  | Default | Description
+:------|:------|:--------|:-----------
+`applicationName` | String | `''` | The API server uses the application name to identify different applications.
+`obfuscatedFileSystemSeed` | String | `apiKey` | By default the specified `apiKey` and user information are used as the seed to the Obfuscated File System.  If you would like greater granularity and separation of data, then provide a unique static string for the seed value.
+`rootDirectory` | String | `'./'` | By default the root directory of the Obfuscated File System will be the current directory.  The database and encrypted data is stored inside the Obfuscated File System.
+
+---
+
+## User Accounts
+
+### `changeBackupCredentials(currentPassphrase, currentPassword, newReminder, newPassphrase)`
+Change the backup credentials for the account.  Use a secure value for the passphrase as it can be used to reset the user's password.
+
+Returns a Promise.
+
+Throws an Error if the `currentPassphrase` or `currentPassword` is incorrect.  
+
+Parameter   | Type  | Description
+:-----------|:------|:-----------
+`currentPassphrase` | String | The `currentPassphrase` setup during registration of the account.
+`currentPassword` | String | The current password for the user.
+`newReminder` | String | The new backup reminder for the user's passphrase.  The reminder is publicly available in plain text.  Do not include sensitive information or wording that allows the passphrase to be easily compromised.
+`newPassphrase` | String | The new backup passphrase for the user.  Use a secure value for this.  This can be used to reset the password for the user's account.
 
 ---
 
@@ -492,27 +463,66 @@ Parameter   | Type  | Description
 
 ---
 
-### `changeBackupCredentials(currentPassphrase, currentPassword, newReminder, newPassphrase)`
-Change the backup credentials for the account.  Use a secure value for the passphrase as it can be used to reset the user's password.
+### `getBackupReminder(userId)` -> `'Reminder for the backup passphrase'`
+Gets the publicly accessible reminder for the user's backup passphrase.  If no ID is provided, the user ID for the currently logged in user will be used.
 
-Returns a Promise.
+Returns a Promise that resolves to the user's reminder.
 
-Throws an Error if the `currentPassphrase` or `currentPassword` is incorrect.  
+Throws an exception if the connection is unavailable.
 
 Parameter   | Type  | Description
 :-----------|:------|:-----------
-`currentPassphrase` | String | The `currentPassphrase` setup during registration of the account.
-`currentPassword` | String | The current password for the user.
-`newReminder` | String | The new backup reminder for the user's passphrase.  The reminder is publicly available in plain text.  Do not include sensitive information or wording that allows the passphrase to be easily compromised.
-`newPassphrase` | String | The new backup passphrase for the user.  Use a secure value for this.  This can be used to reset the password for the user's account.
+`userId` | String | A string ID representing the user.
 
 ---
 
-### `hash(seed)` -> `'hashedString'`
-Produces a sha256 hash of the specified seed.
+### `logIn(userId, password, backupPassphrase[, options])`
 
-Returns a string with the hashed value.
+Decrypts the key file containing the user's private keys with the provided password.  If the decryption succeeds, then a private key will be used to authenticate with the server.  If the key file is not cached locally, the `backupPassphrase` is used to download the key file.
+
+Returns a Promise.
+
+Throws an Error if the `password` or `backupPassphrase` are incorrect, the `userId` is not found, or a connection is unavailable. In the last case the server authentication will be attempted again automatically when any method is called requiring a connection.
 
 Parameter   | Type  | Description
-:------|:------|:-----------
-`seed` | String | Seed for producing the hash
+:-----------|:------|:-----------
+`userId` | String | The userId value is returned at registration.  Call `register()` or use our [user creation interface](TODO place url here).
+`password` | String | The password used to decrypt the key file.
+`backupPassphrase` | String | The `backupPassphrase` is used retrieve the key file from the server.
+
+Option | Type  | Default | Description
+:------|:------|:--------|:-----------
+`cacheFileLocal` | boolean | `true` | By default we cache the encrypted key file in the local Obfuscated File System for offline access and greater efficiency.  Set to `false` to prevent this from being cached.
+
+---
+
+### `register(password, reminder, backupPassphrase)` -> `'userId'`
+
+**Important:** The `password` and `backupPassphrase` should be kept secret.  We recommend using long and complex values with numbers and/or symbols.  Do not store them publicly in plain text.
+
+Generates private keys and registers a new user on the API server.  This user's private keys are encrypted with the `password` to produce a key file.  The `backupPassphrase` is used to reset the password and download the key file. Our web-based user creation utility can also be used to securely generate static users.
+
+Returns a Promise that resolves to the new user's ID.
+
+Throws an Error if the connection is unavailable.
+
+Parameter   | Type  | Description
+:-----------|:------|:-----------
+`password` | String | The password used to encrypt the key file.
+`reminder` | String | The reminder should only be used as a hint to remember the `backupPassphrase`. This string is stored in plain text and should not contain sensitive information.
+`backupPassphrase` | String | The `backupPassphrase` can be used later to reset the password or to allow logging in from another system.
+
+---
+
+### `resetPassword(userId, backupPassphrase, newPassword)`
+If user's password is forgotten, then use this to reset a user's password. Call `getBackupReminder(userId)` to get the reminder for the `backupPassphrase`.
+
+Returns a Promise.
+
+Throws an Error if the `backupPassphrase` is incorrect or user ID is not found.  If the Key File is not cached locally, then an Error will be thrown if the connection is unavailable.
+
+Parameter   | Type  | Description
+:-----------|:------|:-----------
+`userId` | String | A string ID representing the user.
+`backupPassphrase` | String | The `backupPassphrase` is set up during registration of the account.  This is used to reset the password.
+`newPassword` | String | The new password for the user.
