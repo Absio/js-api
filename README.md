@@ -219,7 +219,7 @@ await securedContainer.deleteContainer(containerId);
   * [register(password, question, backupPassphrase)](#registerpassword-reminder-backuppassphrase---userid)
   * [resetPassword(userId, backupPassphrase, newPassword)](#resetpassworduserid-backuppassphrase-newpassword)
 
-### Container
+## Container
 
 ### Container Object
 ``` javascript
