@@ -22,16 +22,18 @@ We use AES256 [encryption](#encryption) with unique keys for each Absio Secured 
 
 ### Users
 * A user is an entity that has its own set of private keys.  
-* Create users with the [`register()`](#registerpassword-question-backuppassphrase---userid) function.
-* A user's public keys are registered with an Absio Server under a static User ID.
+* Create users with the [`register()`](#registerpassword-question-backuppassphrase---userid) function that returns a User ID.
+* A User ID is the value used represent the user entity.
+* A user's public keys are registered with an Absio API Server.
   * Public keys are publicly available to other users for granting access to containers.
   * Public keys are used by the server to validate user actions.
 * Each user can [create](#createcontent-options---containerid) Absio Secured Containers that are uniquely [encrypted](#encryption).
 * Optionally a user can grant other users [access](#accessinformation) to an Absio Secured Container and add unique permissions or lifespan controls.
 
 ### Key File
-* A [user's](#users) Key File is an AES256 [encrypted](#encryption) file containing private keys and password reset.  
+* A [user's](#users) Key File is an AES256 [encrypted](#encryption) file containing private keys and password reset.
 * A [user's](#users) password is used to encrypt their private keys.  This mechanism allows Absio Secured Containers to be accessible offline.
+* A Key File contains both signing and derivation private keys.
 * A backup passphrase can be provided to synchronize a Key File between devices and enable a secure password reset.
 
 ### Obfuscated File System
@@ -41,8 +43,8 @@ We use AES256 [encryption](#encryption) with unique keys for each Absio Secured 
 * The seed for obfuscation combines user, application, and server information to partition the data.
 
 ### Encryption
-* A user's private keys are stored in a [Key File](#key-file) encrypted with AES256 using a key derived from the user's password.
-  * A [Key File](#key-file) contains both signing and derivation private keys.
+* A user's private keys are stored in an encrypted [Key File](#key-file).
+  * The [Key File](#key-file) is encrypted with AES256 using a key derived from the user's password.
   * The encryption key is derived using the Password Based Key Derivation Function 2 (PBKDF2).
 * Every Absio Secured Container has a unique set of secret keys.
   * Secret Keys are stored encrypted and used to securely access the container.
@@ -91,9 +93,8 @@ The `userId`, `password`, and `backupPassphrase` used below are the credentials 
 
    ``` javascript
    await securedContainer.logIn(bobsId, bobsPassword, bobsBackupPassphrase);
-   const latestContainers = await securedContainer.getLastestEvents();
 
-   // Also can use a known container ID returned from create.
+   // Access the container with the Container ID returned from create() or a Container Event.
    const container = await securedContainer.get(knownContainerId);
    ```
 
